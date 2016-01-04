@@ -1,16 +1,14 @@
 import React from 'react';
-import mui from 'material-ui';
-
 //import Colors from 'material-ui/lib/styles/colors';
 import ThemeManager from 'material-ui/lib/styles/theme-manager';
 import DarkRawTheme from 'material-ui/lib/styles/raw-themes/dark-raw-theme';
 
 import RaisedButton from 'material-ui/lib/raised-button';
-//import { FileUpload } from './components/FileUpload.jsx';
+import FileUpload from '../../../../lib/file-upload';
 
 
 export default class Main extends React.Component {
-    // Important! provide uiTheme context for childre (static...) http://material-ui.com/#/customization/themes
+    // Important! provide uiTheme context for children (static...) http://material-ui.com/#/customization/themes
     static get childContextTypes() {
         return {
             muiTheme: React.PropTypes.object
@@ -45,7 +43,10 @@ export default class Main extends React.Component {
 
     render() {
         return (<div>
-            <RaisedButton label="foo"/>
+            <FileUpload
+                onDrop={this.handleFileUploadDrop.bind(this)}
+                dropMessage="Dropped!"/>
+
         </div>);
     }
 }

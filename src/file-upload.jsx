@@ -2,10 +2,10 @@
  * Created by kalle on 04.01.2016.
  */
 'use strict';
-import React from 'react/addons';
+import React from 'react';
 import CircularProgress from 'material-ui/lib/circular-progress';
 
-export class FileUpload extends React.Component{
+export default class FileUpload extends React.Component{
     constructor(props) {
         super(props);
     }
@@ -21,11 +21,11 @@ export class FileUpload extends React.Component{
 
         this._processed_files_count =  0;
 
-        this.reset();
+        this._reset();
     }
 
 
-    reset() {
+    _reset() {
         this.setState({
             is_idle: true,
             is_processing: false,
@@ -33,6 +33,11 @@ export class FileUpload extends React.Component{
             process_messages: [],
             style: this._default_droparea_styles.initial
         });
+    }
+
+
+    handleClick(){
+        this._reset();
     }
 
     handleDragEnter(event){
@@ -57,7 +62,7 @@ export class FileUpload extends React.Component{
 
     handleDragExit(){
         console.log('drag exit');
-        this.reset();
+        this._reset();
     }
 
     handleDrop(event){
@@ -90,7 +95,7 @@ export class FileUpload extends React.Component{
                 //reader.readAsDataURL(file); // – returns the file contents as a data URL
             }
         } else if (this.state.is_idle) {
-            this.reset();
+            this._reset();
         }
     }
 
@@ -133,7 +138,7 @@ export class FileUpload extends React.Component{
 
     render() {
         return(
-            <div onClick={this.reset.bind(this)}
+            <div onClick={this.handleClick.bind(this)}
                  onDragEnter={this.handleDragEnter.bind(this)}
                  onDragOver={this.handleDragOver.bind(this)}
                  onDragExit={this.handleDragExit.bind(this)}
