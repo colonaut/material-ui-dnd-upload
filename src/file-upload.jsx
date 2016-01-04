@@ -3,37 +3,50 @@
  */
 'use strict';
 import React from 'react';
+
+import DefaultRawTheme from 'material-ui/lib/styles/raw-themes/light-raw-theme';
+import ThemeManager from 'material-ui/lib/styles/theme-manager';
+
 import CircularProgress from 'material-ui/lib/circular-progress';
+
 
 export default class FileUpload extends React.Component{
     constructor(props) {
         super(props);
     }
 
+    //Important! this is to consume the attributes/fields that are set in a parent context. In this case muiTheme (which should be set in app/main)
+    static get contextTypes() {
+        return { muiTheme: React.PropTypes.object };
+    }
+
+    // ?needed? we have no children - Important! provide uiTheme context for children (static...) http://material-ui.com/#/customization/themes
+    static get childContextTypes() {
+        return { muiTheme: React.PropTypes.object };
+    }
+    // ?needed? we have no children - Important! http://material-ui.com/#/customization/themes
+    getChildContext() {
+        return { muiTheme: this.state.muiTheme };
+    }
+
+    //update theme inside state whenever a new theme is passed down from the parent / owner using context
+    componentWillReceiveProps(next_props, next_context) {
+        this.setState({
+            muiTheme: next_context.muiTheme ? next_context.muiTheme : this.state.muiTheme
+        });
+    }
+
     componentWillMount(){
-        this._default_droparea_styles = {
-            initial: {position: 'relative', fontFamily: 'Roboto, sans-serif', width: '90%', height: '300px', border: '5px dashed #9e9e9e', borderRadius: '5px', margin: 'auto', textAlign: 'center'},
-            drag_enter: {position: 'relative', fontFamily: 'Roboto, sans-serif', width: '90%', height: '300px', border: '5px dashed #0080D4', borderRadius: '5px', margin: 'auto', textAlign: 'center'},
-            drag_over: {position: 'relative', fontFamily: 'Roboto, sans-serif', width: '90%', height: '300px', border: '5px dashed #0080D4', borderRadius: '5px', margin: 'auto', textAlign: 'center'},
-            drop: {position: 'relative', fontFamily: 'Roboto, sans-serif', width: '90%', height: '300px', margin: 'auto', textAlign: 'center'},
-            processed: {position: 'relative', fontFamily: 'Roboto, sans-serif', width: '90%', height: '300px', margin: 'auto', textAlign: 'center'}
-        };
+
+        //set theme inside state, either context from parent or imported default theme
+        this.setState({
+            muiTheme: this.context.muiTheme ? this.context.muiTheme : ThemeManager.getMuiTheme(DefaultRawTheme)
+        });
 
         this._processed_files_count =  0;
-
         this._reset();
     }
 
-
-    _reset() {
-        this.setState({
-            is_idle: true,
-            is_processing: false,
-            message: 'Drag your file(s) here!',
-            process_messages: [],
-            style: this._default_droparea_styles.initial
-        });
-    }
 
 
     handleClick(){
@@ -44,7 +57,7 @@ export default class FileUpload extends React.Component{
         //console.log('drag enter');
         if (this.state.is_idle) {
             this.setState({
-                style: this.props.dragEnterStyle || this._default_droparea_styles.drag_enter
+                area_style_key: 'drag_enter'
             });
         }
     }
@@ -55,13 +68,13 @@ export default class FileUpload extends React.Component{
         event.preventDefault();
         if (this.state.is_idle){
             this.setState({
-                style: this.props.dragOverStyle || this._default_droparea_styles.drag_over
+                area_style_key: 'drag_over'
             });
         }
     }
 
     handleDragExit(){
-        console.log('drag exit');
+        //console.log('drag exit');
         this._reset();
     }
 
@@ -71,7 +84,7 @@ export default class FileUpload extends React.Component{
         event.preventDefault();
         if (typeof this.props.onDrop === 'function' && this.state.is_idle) { //only do drop stuff if there is something done on drop
             this.setState({
-                style: this.props.dropStyle || this._default_droparea_styles.drop,
+                area_style_key: 'drop',
                 message: null,
                 is_idle: false,
                 is_processing: true
@@ -100,14 +113,14 @@ export default class FileUpload extends React.Component{
     }
 
 
-
     _callbackFileLoaded(message){
         //when a message is passed, we update the messages state
         if (message) {
             let process_messages = this.state.process_messages || [];
             process_messages.unshift(message);
             this.setState({
-                process_messages: process_messages
+                process_messages: process_messages,
+                area_style_key: 'loaded'
             });
         }
     }
@@ -130,47 +143,110 @@ export default class FileUpload extends React.Component{
             this.setState({
                 is_processing: false,
                 message: this.props.processedMessage || 'Done!',
-                style: this.props.processedStyle || this._default_droparea_styles.processed
+                area_style_key: 'processed'
             });
         }
     }
 
 
+    _reset() {
+        this.setState({
+            is_idle: true,
+            is_processing: false,
+            message: 'Drag your file(s) here!',
+            process_messages: [],
+            area_style_key: 'idle'
+        });
+    }
+
+
+    static get _styles(){
+        const float_boxes = {
+            boxSizing: 'border-box',
+            float: 'left'
+        };
+        const drag_area = {
+            idle: Object.assign({ width: '100%', minWidth: '300px', minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '10px' }, float_boxes),
+            drag_enter: Object.assign({ width: '100%', minWidth: '300px', minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '5px' }, float_boxes),
+            drag_over: Object.assign({ width: '100%', minWidth: '300px', minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '5px' }, float_boxes),
+            drop: Object.assign({ width: '50%', minWidth: '150px', minHeight: '200px' }, float_boxes),
+            loaded: Object.assign({ width: '50%', minWidth: '150px', minHeight: '200px' }, float_boxes),
+            processed: Object.assign({ width: '50%', minWidth: '150px', minHeight: '200px' }, float_boxes)
+        };
+        const info_area = {
+            idle: Object.assign({display: 'none'}, float_boxes),
+            drag_enter: Object.assign({display: 'none'}, float_boxes),
+            drag_over: Object.assign({display: 'none'}, float_boxes),
+            drop: Object.assign({}, float_boxes),
+            loaded: Object.assign({}, float_boxes),
+            processed: Object.assign({}, float_boxes)
+        };
+
+        return {
+            canvas: {},
+            drag_area: drag_area,
+            info_area: info_area
+        };
+    }
+
+    static _mergeRelevantContextStyles(mui_theme){
+        const styles = FileUpload._styles;
+        let raw_theme = mui_theme.rawTheme;
+
+        console.log('the raw theme:', raw_theme);
+
+        Object.assign(styles.canvas, {
+            fontFamily: raw_theme.fontFamily
+        });
+        Object.assign(styles.drag_area.idle, {
+           borderColor: raw_theme.palette.accent2Color
+        });
+
+        return styles;
+    }
+
+
     render() {
+
+        let merged_styles = this.constructor._mergeRelevantContextStyles(this.state.muiTheme);
+
+        console.log('the merged style:', merged_styles);
+
         return(
             <div onClick={this.handleClick.bind(this)}
                  onDragEnter={this.handleDragEnter.bind(this)}
                  onDragOver={this.handleDragOver.bind(this)}
                  onDragExit={this.handleDragExit.bind(this)}
                  onDrop={this.handleDrop.bind(this)}
-                 style={this.state.style}>
+                 style={merged_styles.canvas}>
 
-                <div style={{display: this.state.message ? 'block' : 'none',
-                    position: 'relative', height: '50%'}}>
-                    <p style={{position: 'absolute', bottom: '0px', width: '100%', margin: '0.2em'}}>{this.state.message}</p>
+                <div style={merged_styles.drag_area[this.state.area_style_key]}>
+
+                    <div style={{display: this.state.message ? 'block' : 'none'
+                        }}>
+                        <p style={{}}>{this.state.message}</p>
+                    </div>
+
+                    <div style={{display: this.state.is_processing ? 'block' : 'none'
+                    }}>
+                        <CircularProgress mode="indeterminate" />
+                    </div>
+
                 </div>
 
-                <div style={{display: this.state.is_processing ? 'block' : 'none'}}>
-                    <CircularProgress mode="indeterminate" />
+                <div style={merged_styles.info_area[this.state.area_style_key]}>
+
+                    <div style={{display: this.state.process_messages.length ? 'block' : 'none',
+                        border: '1px solid #f00',
+                        overflow: 'auto',
+                        fontFamily: 'Roboto, sans-serif'
+                        }}>
+                        <pre>{this.state.process_messages.join('\n')}</pre>
+                    </div>
+
                 </div>
 
-                <div style={{display: this.state.process_messages.length ? 'block' : 'none',
-                    overflow: 'auto',
-                    height: '50%',
-                    width: '100%',
-                    position: 'absolute',
-                    bottom: '3px',
-                    margin: '0 0.5em',
-                    padding: '0.5em',
-                    textAlign: 'left',
-                    backgroundColor: '#f8f8f8',
-                    transition: 'all 450ms cubic-bezier(0.23, 1, 0.32, 1) 0ms',
-                    boxSizing: 'border-box',
-                    fontFamily: 'Roboto, sans-serif',
-                    boxShadow: '0 1px 6px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.24)',
-                    borderRadius: '2px'}}>
-                    <pre>{this.state.process_messages.join('\n')}</pre>
-                </div>
+                <div style={{clear: 'both'}}></div>
 
             </div>);
     }

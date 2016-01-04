@@ -4,7 +4,7 @@ import ThemeManager from 'material-ui/lib/styles/theme-manager';
 import DarkRawTheme from 'material-ui/lib/styles/raw-themes/dark-raw-theme';
 
 import RaisedButton from 'material-ui/lib/raised-button';
-import FileUpload from '../../../../lib/file-upload';
+import FileUpload from '../../../../src/file-upload.jsx';
 
 
 export default class Main extends React.Component {
@@ -18,12 +18,12 @@ export default class Main extends React.Component {
     // Important! http://material-ui.com/#/customization/themes
     getChildContext() {
         return {
-            muiTheme: ThemeManager.getMuiTheme(DarkRawTheme)
+            muiTheme: ThemeManager.getMuiTheme()
         };
     }
 
     handleFileUploadDrop(file, content, callback_file_loaded, callback_file_processed) {
-        //console.log(event, file, content, callback);
+        //console.log(file, content, callback_file_loaded, callback_file_processed);
 
         callback_file_loaded('loaded, start processing ' + file.name);
 

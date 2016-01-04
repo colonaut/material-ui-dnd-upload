@@ -6,8 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "webpack --watch",
-    "build": "webpack",
-    "dev": "webpack-dev-server --devtool eval --progress --colors --hot --content-base ./example/www"
+    "build-example": "webpack",
+    "dev-example": "webpack-dev-server --devtool eval --progress --colors --hot --content-base ./example/www"
   },
   "repository": {
     "type": "git",
