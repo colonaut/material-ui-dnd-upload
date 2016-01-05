@@ -3,13 +3,13 @@
  */
 'use strict';
 import React from 'react';
-
 import DefaultRawTheme from 'material-ui/lib/styles/raw-themes/light-raw-theme';
 import ThemeManager from 'material-ui/lib/styles/theme-manager';
-
+import Avatar from 'material-ui/lib/avatar';
 import CircularProgress from 'material-ui/lib/circular-progress';
 import { List, ListItem } from 'material-ui/lib/lists';
 import Divider from 'material-ui/lib/divider';
+import { FileTypeUnknown, FileTypePdf, FileTypeText, FileTypeImage } from './svg_icons'
 
 
 export default class FileStorage extends React.Component{
@@ -46,7 +46,6 @@ export default class FileStorage extends React.Component{
 
         this._reset_states();
     }
-
 
 
     handleClick(){
@@ -152,7 +151,7 @@ export default class FileStorage extends React.Component{
             let process_messages = this.state.process_messages || [];
             process_messages.unshift(message);
             this.setState({
-                process_messages: process_messages,
+                process_messages: process_messages
             });
         }
     }
@@ -183,6 +182,28 @@ export default class FileStorage extends React.Component{
         }
     }
 
+    static get _icons(){
+        return {
+            pdf: <FileTypePdf/>,
+            image: <FileTypeImage />,
+            text: <FileTypeText color="#FF0" />
+
+        }
+    }
+
+    static _getIRelevantIcon(file_type){
+        let icon = <FileTypeUnknown/>;
+        let keys = Object.keys(FileStorage._icons);
+
+        for (let i = 0, key; key = keys[i], i < keys.length; i++){
+            if (file_type.startsWith(key) || file_type.endsWith(key)) {
+                icon = FileStorage._icons[key];
+                break;
+            }
+        }
+
+        return <Avatar icon={icon} />;
+    }
 
     static get _styles(){
         const _float_boxes = {
@@ -269,10 +290,12 @@ export default class FileStorage extends React.Component{
 
                     <List subheader="Queued files">
                         {
-                            this.state.queue.map((file, i) => {
+                            this.state.queue.map((file) => {
                                 return(<div>
                                     <Divider inset={true} />
-                                    <ListItem primaryText={file.name} secondaryText={file.size + ' bytes'} />
+                                    <ListItem primaryText={file.name}
+                                              secondaryText={file.size + ' bytes | ' + file.type}
+                                              leftAvatar={FileStorage._getIRelevantIcon(file.type)}/>
                                 </div>);
                             })
                         }
