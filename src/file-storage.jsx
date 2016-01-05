@@ -8,6 +8,8 @@ import DefaultRawTheme from 'material-ui/lib/styles/raw-themes/light-raw-theme';
 import ThemeManager from 'material-ui/lib/styles/theme-manager';
 
 import CircularProgress from 'material-ui/lib/circular-progress';
+import { List, ListItem } from 'material-ui/lib/lists';
+import Divider from 'material-ui/lib/divider';
 
 
 export default class FileStorage extends React.Component{
@@ -57,7 +59,7 @@ export default class FileStorage extends React.Component{
         event.preventDefault();
         if (this.state.is_idle) {
             this.setState({
-                area_style_key: 'drag_enter'
+                box_style_key: 'drag_enter'
             });
         }
     }
@@ -68,7 +70,7 @@ export default class FileStorage extends React.Component{
         event.preventDefault();
         if (this.state.is_idle){
             this.setState({
-                area_style_key: 'drag_over'
+                box_style_key: 'drag_over'
             });
         }
     }
@@ -86,7 +88,7 @@ export default class FileStorage extends React.Component{
         event.preventDefault();
         if (this.state.is_idle) { //only do drop stuff if there is something done on drop
             this.setState({
-                area_style_key: 'drop',
+                box_style_key: 'drop',
                 message: null,
                 is_idle: false,
                 is_processing: true
@@ -124,9 +126,23 @@ export default class FileStorage extends React.Component{
             let new_queue = this.state.queue;
             new_queue.unshift(transfer_file);
             this.setState({queue: new_queue});
-        }, this.state.queue.length * 100 + 100);
+        }, this.state.queue.length * 200 + 200);
 
     }
+
+    _reset_states() {
+        this.setState({
+            is_idle: true,
+            is_processing: false,
+            box_style_key: 'idle',
+            queue_item_style_key: 'loaded',
+            queue: [],
+            message: this.props.idleMessage || 'Drag & drop your file(s) here!',
+            process_messages: []
+        });
+        this._processed_files_count =  0;
+    }
+
 
     _callbackFileLoaded(message){
         //This is the optional repassed callback for one single file, when it is loaded.
@@ -162,49 +178,38 @@ export default class FileStorage extends React.Component{
             this.setState({
                 is_processing: false,
                 message: this.props.processedMessage || 'Done!',
-                area_style_key: 'processed'
+                box_style_key: 'processed'
             });
         }
     }
 
 
-    _reset_states() {
-        this.setState({
-            is_idle: true,
-            is_processing: false,
-            area_style_key: 'idle',
-            queue: [],
-            message: this.props.idleMessage || 'Drag & drop your file(s) here!',
-            process_messages: []
-        });
-        this._processed_files_count =  0;
-    }
-
-
     static get _styles(){
-        const float_boxes = {
+        const _float_boxes = {
             boxSizing: 'border-box',
-            float: 'left'
+            float: 'left',
+            padding: '5px'
         };
-        const drag_area = {
-            idle: Object.assign({ width: '100%', minWidth: '300px', minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '10px' }, float_boxes),
-            drag_enter: Object.assign({ width: '100%', minWidth: '300px', minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '5px' }, float_boxes),
-            drag_over: Object.assign({ width: '100%', minWidth: '300px', minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '5px' }, float_boxes),
-            drop: Object.assign({ width: '50%', minWidth: '150px', minHeight: '200px' }, float_boxes),
-            processed: Object.assign({ width: '50%', minWidth: '150px', minHeight: '200px' }, float_boxes)
+
+        const drag_box = {
+            idle: Object.assign({ width: '100%', minWidth: '300px', minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '10px' }, _float_boxes),
+            drag_enter: Object.assign({ width: '100%', minWidth: '300px', minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '5px' }, _float_boxes),
+            drag_over: Object.assign({ width: '100%', minWidth: '300px', minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '5px' }, _float_boxes),
+            drop: Object.assign({ width: '50%', minWidth: '250px', minHeight: '200px' }, _float_boxes),
+            processed: Object.assign({ width: '50%', minWidth: '250px', minHeight: '200px' }, _float_boxes)
         };
-        const info_area = {
-            idle: Object.assign({display: 'none'}, float_boxes),
-            drag_enter: Object.assign({display: 'none'}, float_boxes),
-            drag_over: Object.assign({display: 'none'}, float_boxes),
-            drop: Object.assign({ width: '50%', minWidth: '150px', minHeight: '200px' }, float_boxes),
-            processed: Object.assign({ width: '50%', minWidth: '150px', minHeight: '200px' }, float_boxes)
+        const queue_box = {
+            idle: Object.assign({display: 'none'}, _float_boxes),
+            drag_enter: Object.assign({display: 'none'}, _float_boxes),
+            drag_over: Object.assign({display: 'none'}, _float_boxes),
+            drop: Object.assign({ width: '50%', minWidth: '150px', minHeight: '200px', borderWidth: '1px', borderStyle: 'solid', borderRadius: '2px' }, _float_boxes),
+            processed: Object.assign({ width: '50%', minWidth: '150px', minHeight: '200px', borderWidth: '1px', borderStyle: 'solid', borderRadius: '2px' }, _float_boxes)
         };
 
         return {
-            canvas: {},
-            drag_area: drag_area,
-            info_area: info_area
+            canvas: { boxSizing: 'border-box' },
+            drag_box: drag_box,
+            queue_box: queue_box
         };
     }
 
@@ -216,10 +221,17 @@ export default class FileStorage extends React.Component{
         //TODO: apply colors from theme
 
         Object.assign(styles.canvas, {
-            fontFamily: raw_theme.fontFamily
+            fontFamily: raw_theme.fontFamily,
+            backgroundColor: raw_theme.canvasColor
         });
-        Object.assign(styles.drag_area.idle, {
-           borderColor: raw_theme.palette.accent2Color
+        Object.assign(styles.drag_box.idle, {
+           borderColor: raw_theme.palette.borderColor
+        });
+        Object.assign(styles.queue_box.drop, {
+            borderColor: raw_theme.palette.borderColor
+        });
+        Object.assign(styles.queue_box.processed, {
+            borderColor: raw_theme.palette.borderColor
         });
 
         return styles;
@@ -238,7 +250,7 @@ export default class FileStorage extends React.Component{
                  onDrop={this.handleDrop.bind(this)}
                  style={merged_styles.canvas}>
 
-                <div style={merged_styles.drag_area[this.state.area_style_key]}>
+                <div style={merged_styles.drag_box[this.state.box_style_key]}>
 
                     <div style={{display: this.state.message ? 'block' : 'none'
                         }}>
@@ -252,20 +264,19 @@ export default class FileStorage extends React.Component{
 
                 </div>
 
-                <div style={merged_styles.info_area[this.state.area_style_key]}>
 
-                    {this.state.area_style_key}
+                <div style={merged_styles.queue_box[this.state.box_style_key]}>
 
-                    {
-                        this.state.queue.map((file, i) => {
-                            return(<div key={'queue_file_' + i}>
-                                f: {file.name}
-                            </div>);
-                        })
-                    }
-
-
-
+                    <List subheader="Queued files">
+                        {
+                            this.state.queue.map((file, i) => {
+                                return(<div>
+                                    <Divider inset={true} />
+                                    <ListItem primaryText={file.name} secondaryText={file.size + ' bytes'} />
+                                </div>);
+                            })
+                        }
+                    </List>
 
                     <div style={{display: this.state.process_messages.length ? 'display' : 'none',
                         border: '1px solid #f00',
