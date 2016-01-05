@@ -4,7 +4,7 @@ import ThemeManager from 'material-ui/lib/styles/theme-manager';
 import DarkRawTheme from 'material-ui/lib/styles/raw-themes/dark-raw-theme';
 
 import RaisedButton from 'material-ui/lib/raised-button';
-import FileUpload from '../../../../src/file-upload.jsx';
+import FileStorage from '../../../../src/file-storage.jsx';
 
 
 export default class Main extends React.Component {
@@ -43,7 +43,7 @@ export default class Main extends React.Component {
 
     render() {
         return (<div>
-            <FileUpload
+            <FileStorage
                 onDrop={this.handleFileUploadDrop.bind(this)}
                 dropMessage="Dropped!"/>
 

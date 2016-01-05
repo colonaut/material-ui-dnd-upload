@@ -10,7 +10,7 @@ import ThemeManager from 'material-ui/lib/styles/theme-manager';
 import CircularProgress from 'material-ui/lib/circular-progress';
 
 
-export default class FileUpload extends React.Component{
+export default class FileStorage extends React.Component{
     constructor(props) {
         super(props);
     }
@@ -190,7 +190,7 @@ export default class FileUpload extends React.Component{
     }
 
     static _mergeRelevantContextStyles(mui_theme){
-        const styles = FileUpload._styles;
+        const styles = FileStorage._styles;
         let raw_theme = mui_theme.rawTheme;
 
         console.log('the raw theme:', raw_theme);
