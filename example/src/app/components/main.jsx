@@ -25,13 +25,13 @@ export default class Main extends React.Component {
     handleFileUploadDrop(file, content, callback_file_loaded, callback_file_processed) {
         //console.log(file, content, callback_file_loaded, callback_file_processed);
 
-        callback_file_loaded('loaded, start processing ' + file.name);
+        //callback_file_loaded('loaded, start processing ' + file.name);
 
         this._fileUploadTimer = this._fileUploadTimer || 0;
         this._fileUploadTimer = this._fileUploadTimer + 1000;
 
         setTimeout(() => {
-            callback_file_processed('setTimeout upload simulation done for ' + file.name);
+            //callback_file_processed('setTimeout upload simulation done for ' + file.name);
         }, this._fileUploadTimer);
 
     }
@@ -45,6 +45,7 @@ export default class Main extends React.Component {
         return (<div>
             <FileStorage
                 onDrop={this.handleFileUploadDrop.bind(this)}
+                idleMessage="Your files go here, dude!"
                 dropMessage="Dropped!"/>
 
         </div>);

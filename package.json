@@ -1,7 +1,7 @@
 {
   "name": "material-ui-file-storage",
   "version": "0.0.2",
-  "description": "A component for and based on material-ui which allows to store files and process them via drag & drop",
+  "description": "A react component based on material-ui which allows to store files and process them via drag & drop",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -14,6 +14,7 @@
     "url": "git+https://github.com/colonaut/material-ui-dnd-uploader.git"
   },
   "keywords": [
+    "react",
     "material-ui",
     "material",
     "ui",

@@ -19,7 +19,7 @@ export default class FileStorage extends React.Component{
     static get contextTypes() {
         return { muiTheme: React.PropTypes.object };
     }
-
+/*
     // ?needed? we have no children - Important! provide uiTheme context for children (static...) http://material-ui.com/#/customization/themes
     static get childContextTypes() {
         return { muiTheme: React.PropTypes.object };
@@ -28,7 +28,7 @@ export default class FileStorage extends React.Component{
     getChildContext() {
         return { muiTheme: this.state.muiTheme };
     }
-
+*/
     //update theme inside state whenever a new theme is passed down from the parent / owner using context
     componentWillReceiveProps(next_props, next_context) {
         this.setState({
@@ -37,24 +37,24 @@ export default class FileStorage extends React.Component{
     }
 
     componentWillMount(){
-
         //set theme inside state, either context from parent or imported default theme
         this.setState({
             muiTheme: this.context.muiTheme ? this.context.muiTheme : ThemeManager.getMuiTheme(DefaultRawTheme)
         });
 
-        this._processed_files_count =  0;
-        this._reset();
+        this._reset_states();
     }
 
 
 
     handleClick(){
-        this._reset();
+        this._reset_states();
     }
 
     handleDragEnter(event){
         //console.log('drag enter');
+        event.preventDefault();
+        event.preventDefault();
         if (this.state.is_idle) {
             this.setState({
                 area_style_key: 'drag_enter'
@@ -73,16 +73,18 @@ export default class FileStorage extends React.Component{
         }
     }
 
-    handleDragExit(){
+    handleDragExit(event){
         //console.log('drag exit');
-        this._reset();
+        event.preventDefault();
+        event.preventDefault();
+        this._reset_states();
     }
 
     handleDrop(event){
         //console.log('drop', event);
         event.stopPropagation();
         event.preventDefault();
-        if (typeof this.props.onDrop === 'function' && this.state.is_idle) { //only do drop stuff if there is something done on drop
+        if (this.state.is_idle) { //only do drop stuff if there is something done on drop
             this.setState({
                 area_style_key: 'drop',
                 message: null,
@@ -94,12 +96,17 @@ export default class FileStorage extends React.Component{
                 let reader = new FileReader();
                 reader.onload = ((loaded_file) => {
                     return (evt) => {
-                        this.props.onDrop(
-                            loaded_file,
-                            evt.target.result,
-                            this._callbackFileLoaded.bind(this),
-                            this._callbackFileProcessed.bind(this));
 
+
+                        this._update_queue(transfer_file);
+
+                        if (typeof this.props.onDrop === 'function'){
+                            this.props.onDrop(
+                                loaded_file,
+                                evt.target.result,
+                                this._callbackFileLoaded.bind(this),
+                                this._callbackFileProcessed.bind(this));
+                        }
                     };
                 })(transfer_file);
                 console.log('determine right method for reader with transfer_file.type:', transfer_file.type);
@@ -108,24 +115,36 @@ export default class FileStorage extends React.Component{
                 //reader.readAsDataURL(file); // – returns the file contents as a data URL
             }
         } else if (this.state.is_idle) {
-            this._reset();
+            this._reset_states();
         }
     }
 
+    _update_queue(transfer_file){
+        setTimeout(() => {
+            let new_queue = this.state.queue;
+            new_queue.unshift(transfer_file);
+            this.setState({queue: new_queue});
+        }, this.state.queue.length * 100 + 100);
+
+    }
 
     _callbackFileLoaded(message){
-        //when a message is passed, we update the messages state
+        //This is the optional repassed callback for one single file, when it is loaded.
+        //It's a hook for outside to i.e. pass a message
+        // Do NOT do things for the component here!
         if (message) {
             let process_messages = this.state.process_messages || [];
             process_messages.unshift(message);
             this.setState({
                 process_messages: process_messages,
-                area_style_key: 'loaded'
             });
         }
     }
 
     _callbackFileProcessed(message){
+        //This is the optional repassed callback for one single file, when it i.e. has been processed from outside.
+        //One can use that multiple times, i.e. to change the message for the individual file
+        // Do NOT do things for the component here!
         this._processed_files_count++;
 
         //when a message is passed, we update the messages state
@@ -149,14 +168,16 @@ export default class FileStorage extends React.Component{
     }
 
 
-    _reset() {
+    _reset_states() {
         this.setState({
             is_idle: true,
             is_processing: false,
-            message: 'Drag your file(s) here!',
-            process_messages: [],
-            area_style_key: 'idle'
+            area_style_key: 'idle',
+            queue: [],
+            message: this.props.idleMessage || 'Drag & drop your file(s) here!',
+            process_messages: []
         });
+        this._processed_files_count =  0;
     }
 
 
@@ -170,16 +191,14 @@ export default class FileStorage extends React.Component{
             drag_enter: Object.assign({ width: '100%', minWidth: '300px', minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '5px' }, float_boxes),
             drag_over: Object.assign({ width: '100%', minWidth: '300px', minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '5px' }, float_boxes),
             drop: Object.assign({ width: '50%', minWidth: '150px', minHeight: '200px' }, float_boxes),
-            loaded: Object.assign({ width: '50%', minWidth: '150px', minHeight: '200px' }, float_boxes),
             processed: Object.assign({ width: '50%', minWidth: '150px', minHeight: '200px' }, float_boxes)
         };
         const info_area = {
             idle: Object.assign({display: 'none'}, float_boxes),
             drag_enter: Object.assign({display: 'none'}, float_boxes),
             drag_over: Object.assign({display: 'none'}, float_boxes),
-            drop: Object.assign({}, float_boxes),
-            loaded: Object.assign({}, float_boxes),
-            processed: Object.assign({}, float_boxes)
+            drop: Object.assign({ width: '50%', minWidth: '150px', minHeight: '200px' }, float_boxes),
+            processed: Object.assign({ width: '50%', minWidth: '150px', minHeight: '200px' }, float_boxes)
         };
 
         return {
@@ -193,7 +212,8 @@ export default class FileStorage extends React.Component{
         const styles = FileStorage._styles;
         let raw_theme = mui_theme.rawTheme;
 
-        console.log('the raw theme:', raw_theme);
+        //console.log('the raw theme:', raw_theme);
+        //TODO: apply colors from theme
 
         Object.assign(styles.canvas, {
             fontFamily: raw_theme.fontFamily
@@ -207,10 +227,8 @@ export default class FileStorage extends React.Component{
 
 
     render() {
-
         let merged_styles = this.constructor._mergeRelevantContextStyles(this.state.muiTheme);
-
-        console.log('the merged style:', merged_styles);
+        //console.log('the merged style:', merged_styles);
 
         return(
             <div onClick={this.handleClick.bind(this)}
@@ -236,7 +254,20 @@ export default class FileStorage extends React.Component{
 
                 <div style={merged_styles.info_area[this.state.area_style_key]}>
 
-                    <div style={{display: this.state.process_messages.length ? 'block' : 'none',
+                    {this.state.area_style_key}
+
+                    {
+                        this.state.queue.map((file, i) => {
+                            return(<div key={'queue_file_' + i}>
+                                f: {file.name}
+                            </div>);
+                        })
+                    }
+
+
+
+
+                    <div style={{display: this.state.process_messages.length ? 'display' : 'none',
                         border: '1px solid #f00',
                         overflow: 'auto',
                         fontFamily: 'Roboto, sans-serif'
