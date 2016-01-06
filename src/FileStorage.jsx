@@ -5,11 +5,15 @@
 import React from 'react';
 import DefaultRawTheme from 'material-ui/lib/styles/raw-themes/light-raw-theme';
 import ThemeManager from 'material-ui/lib/styles/theme-manager';
+
 import Avatar from 'material-ui/lib/avatar';
 import CircularProgress from 'material-ui/lib/circular-progress';
+import LinearProgress from 'material-ui/lib/linear-progress';
 import { List, ListItem } from 'material-ui/lib/lists';
 import Divider from 'material-ui/lib/divider';
-import { FileTypeUnknown, FileTypePdf, FileTypeText, FileTypeImage } from './svg_icons'
+
+import { FileFileUpload } from 'material-ui/lib/svg-icons';
+import { FileTypeUnknown, FileTypePdf, FileTypeText, FileTypeImage } from './svg_icons';
 
 
 export default class FileStorage extends React.Component{
@@ -86,23 +90,22 @@ export default class FileStorage extends React.Component{
         event.stopPropagation();
         event.preventDefault();
         if (this.state.is_idle) { //only do drop stuff if there is something done on drop
+            let has_processing_callback = typeof this.props.onLoaded === 'function';
             this.setState({
                 box_style_key: 'drop',
                 message: null,
                 is_idle: false,
-                is_processing: true
+                is_processing: has_processing_callback
             });
+
             this._transfer_files = event.dataTransfer.files;
             for (let i = 0, transfer_file; transfer_file = this._transfer_files[i]; i++) {
                 let reader = new FileReader();
                 reader.onload = ((loaded_file) => {
                     return (evt) => {
-
-
                         this._update_queue(transfer_file);
-
-                        if (typeof this.props.onDrop === 'function'){
-                            this.props.onDrop(
+                        if (has_processing_callback){
+                            this.props.onLoaded(
                                 loaded_file,
                                 evt.target.result,
                                 this._callbackFileLoaded.bind(this),
@@ -110,6 +113,7 @@ export default class FileStorage extends React.Component{
                         }
                     };
                 })(transfer_file);
+
                 console.log('determine right method for reader with transfer_file.type:', transfer_file.type);
                 reader.readAsText(transfer_file); //– returns the file contents as plain text
                 //reader.readAsArrayBuffer(file); // – returns the file contents as an ArrayBuffer (good for binary data such as images)
@@ -136,6 +140,7 @@ export default class FileStorage extends React.Component{
             box_style_key: 'idle',
             queue_item_style_key: 'loaded',
             queue: [],
+            file_messages: [],
             message: this.props.idleMessage || 'Drag & drop your file(s) here!',
             process_messages: []
         });
@@ -143,7 +148,10 @@ export default class FileStorage extends React.Component{
     }
 
 
-    _callbackFileLoaded(message){
+    _callbackFileLoaded(file, message){
+
+        console.log(message);
+
         //This is the optional repassed callback for one single file, when it is loaded.
         //It's a hook for outside to i.e. pass a message
         // Do NOT do things for the component here!
@@ -151,7 +159,8 @@ export default class FileStorage extends React.Component{
             let process_messages = this.state.process_messages || [];
             process_messages.unshift(message);
             this.setState({
-                process_messages: process_messages
+                process_messages: process_messages,
+                file_messages: Object.assign(this.state.file_messages, {[(() => file.name)()]: message })
             });
         }
     }
@@ -176,7 +185,7 @@ export default class FileStorage extends React.Component{
             this._processed_files_count = 0;
             this.setState({
                 is_processing: false,
-                message: this.props.processedMessage || 'Done!',
+                message: this.props.processedMessage || 'Processig Done!',
                 box_style_key: 'processed'
             });
         }
@@ -191,7 +200,7 @@ export default class FileStorage extends React.Component{
         }
     }
 
-    static _getIRelevantIcon(file_type){
+    static _getIRelevantFileTypeIcon(file_type){
         let icon = <FileTypeUnknown/>;
         let keys = Object.keys(FileStorage._icons);
 
@@ -290,18 +299,23 @@ export default class FileStorage extends React.Component{
 
                     <List subheader="Queued files">
                         {
-                            this.state.queue.map((file) => {
-                                return(<div>
+                            this.state.queue.map((file, i) => {
+                                return(<div key={'queue_list_item_' + i}>
                                     <Divider inset={true} />
                                     <ListItem primaryText={file.name}
-                                              secondaryText={file.size + ' bytes | ' + file.type}
-                                              leftAvatar={FileStorage._getIRelevantIcon(file.type)}/>
+                                            secondaryTextLines={2}
+                                            secondaryText={[
+                                                <LinearProgress key={'queue_list_item_progress_' + i} />,
+                                                file.size + ' bytes | ' + file.type,
+                                                ' -> ' + this.state.file_messages[file.name]
+                                            ]} leftAvatar={FileStorage._getIRelevantFileTypeIcon(file.type)}>
+                                    </ListItem>
                                 </div>);
                             })
                         }
                     </List>
 
-                    <div style={{display: this.state.process_messages.length ? 'display' : 'none',
+                    <div style={{display: this.state.process_messages.length ? 'block' : 'none',
                         border: '1px solid #f00',
                         overflow: 'auto',
                         fontFamily: 'Roboto, sans-serif'
