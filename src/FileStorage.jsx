@@ -108,8 +108,7 @@ export default class FileStorage extends React.Component{
                             this.props.onLoaded(
                                 loaded_file,
                                 evt.target.result,
-                                this._callbackFileLoaded.bind(this),
-                                this._callbackFileProcessed.bind(this));
+                                this._callbackFileTask.bind(this));
                         }
                     };
                 })(transfer_file);
@@ -136,60 +135,40 @@ export default class FileStorage extends React.Component{
     _reset_states() {
         this.setState({
             is_idle: true,
-            is_processing: false,
+            is_processing: false, //will not be needed when we start building left side
             box_style_key: 'idle',
-            queue_item_style_key: 'loaded',
             queue: [],
-            file_messages: [],
-            message: this.props.idleMessage || 'Drag & drop your file(s) here!',
-            process_messages: []
+            file_states: [],
+            message: this.props.idleMessage || 'Drag & drop your file(s) here!'
         });
-        this._processed_files_count =  0;
     }
 
 
-    _callbackFileLoaded(file, message){
-
-        console.log(message);
-
-        //This is the optional repassed callback for one single file, when it is loaded.
+    _callbackFileTask(file, message, next_task){
+        //This is the optional re-passed callback for one single file, when it is loaded.
         //It's a hook for outside to i.e. pass a message
         // Do NOT do things for the component here!
-        if (message) {
-            let process_messages = this.state.process_messages || [];
-            process_messages.unshift(message);
+
+        next_task = typeof next_task === 'function' ? next_task : typeof message === 'function' ? message : undefined;
+
+        if (typeof message === 'string') {
+
+            console.log('build the message now');
+
             this.setState({
-                process_messages: process_messages,
-                file_messages: Object.assign(this.state.file_messages, {[(() => file.name)()]: message })
+                file_states: Object.assign(this.state.file_states, {[(() => file.name)()]: {
+                    message: message
+                }})
             });
         }
+
+        if (next_task){
+            console.log('now run the next task!');
+            //next_task(file, this._callbackFileTask.bind(this));
+        }
+
     }
 
-    _callbackFileProcessed(message){
-        //This is the optional repassed callback for one single file, when it i.e. has been processed from outside.
-        //One can use that multiple times, i.e. to change the message for the individual file
-        // Do NOT do things for the component here!
-        this._processed_files_count++;
-
-        //when a message is passed, we update the messages state
-        if (message) {
-            let process_messages = this.state.process_messages || [];
-            process_messages.unshift(message);
-            this.setState({
-                process_messages: process_messages
-            });
-        }
-
-        //when all fies are done, we apply the done states
-        if (this._processed_files_count === this._transfer_files.length){
-            this._processed_files_count = 0;
-            this.setState({
-                is_processing: false,
-                message: this.props.processedMessage || 'Processig Done!',
-                box_style_key: 'processed'
-            });
-        }
-    }
 
     static get _icons(){
         return {
@@ -307,22 +286,12 @@ export default class FileStorage extends React.Component{
                                             secondaryText={[
                                                 <LinearProgress key={'queue_list_item_progress_' + i} />,
                                                 file.size + ' bytes | ' + file.type,
-                                                ' -> ' + this.state.file_messages[file.name]
-                                            ]} leftAvatar={FileStorage._getIRelevantFileTypeIcon(file.type)}>
-                                    </ListItem>
+                                                ' -> ' + this.state.file_states[file.name].message
+                                            ]} leftAvatar={FileStorage._getIRelevantFileTypeIcon(file.type)} />
                                 </div>);
                             })
                         }
                     </List>
-
-                    <div style={{display: this.state.process_messages.length ? 'block' : 'none',
-                        border: '1px solid #f00',
-                        overflow: 'auto',
-                        fontFamily: 'Roboto, sans-serif'
-                        }}>
-                        <pre>{this.state.process_messages.join('\n')}</pre>
-                    </div>
-
                 </div>
 
                 <div style={{clear: 'both'}}></div>
