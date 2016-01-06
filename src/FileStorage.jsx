@@ -109,6 +109,13 @@ export default class FileStorage extends React.Component{
                                 loaded_file,
                                 evt.target.result,
                                 this._callbackFileTask.bind(this));
+                        } else {
+                            this.setState({file_states: Object.assign(this.state.file_states, {
+                                [(() => transfer_file.name)()]: {
+                                    message: transfer_file.size + ' | bytes',
+                                    is_processing: false
+                                }
+                            })});
                         }
                     };
                 })(transfer_file);
@@ -127,9 +134,10 @@ export default class FileStorage extends React.Component{
         setTimeout(() => {
             let new_queue = this.state.queue;
             new_queue.unshift(transfer_file);
-            this.setState({queue: new_queue});
+            this.setState({
+                queue: new_queue
+            });
         }, this.state.queue.length * 200 + 200);
-
     }
 
     _reset_states() {
@@ -148,19 +156,21 @@ export default class FileStorage extends React.Component{
         //This is the optional re-passed callback for one single file, when it is loaded.
         //It's a hook for outside to i.e. pass a message
         // Do NOT do things for the component here!
-
         next_task = typeof next_task === 'function' ? next_task : typeof message === 'function' ? message : undefined;
 
+        let new_message = [file.size + ' bytes'];
         if (typeof message === 'string') {
-
-            console.log('build the message now');
-
-            this.setState({
-                file_states: Object.assign(this.state.file_states, {[(() => file.name)()]: {
-                    message: message
-                }})
-            });
+            new_message.push(' | ' + message);
+            if (next_task)
+                new_message.unshift(<LinearProgress />);
         }
+
+        this.setState({
+            file_states: Object.assign(this.state.file_states, {[(() => file.name)()]: {
+                message: new_message,
+                is_processing: next_task ? true : false
+            }})
+        });
 
         if (next_task){
             console.log('now run the next task!');
@@ -282,12 +292,9 @@ export default class FileStorage extends React.Component{
                                 return(<div key={'queue_list_item_' + i}>
                                     <Divider inset={true} />
                                     <ListItem primaryText={file.name}
-                                            secondaryTextLines={2}
-                                            secondaryText={[
-                                                <LinearProgress key={'queue_list_item_progress_' + i} />,
-                                                file.size + ' bytes | ' + file.type,
-                                                ' -> ' + this.state.file_states[file.name].message
-                                            ]} leftAvatar={FileStorage._getIRelevantFileTypeIcon(file.type)} />
+                                              secondaryTextLines={this.state.file_states[file.name].is_processing ? 2 : 1}
+                                              secondaryText={this.state.file_states[file.name].message}
+                                              leftAvatar={FileStorage._getIRelevantFileTypeIcon(file.type)} />
                                 </div>);
                             })
                         }

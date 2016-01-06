@@ -27,14 +27,14 @@ export default class Main extends React.Component {
         this._fileUploadTimer = this._fileUploadTimer || 0;
         this._fileUploadTimer = this._fileUploadTimer + 1000;
         setTimeout(() => {
-            callback_file_task('setTimeout upload simulation done for ' + file.name);
+            callback_file_task('yet another task done!');
         }, this._fileUploadTimer);
     }
 
     handleFileLoaded(file, file_content, callback_file_task) {
         //console.log(file, file_content, callback_file_loaded);
-        callback_file_task(file, 'loaded, start processing');
-        //callback_file_task(file, 'loaded, start processing', this.yetAnotherTask.bind(this, file, callback_file_task));
+        callback_file_task(file, 'did not define a task. nothing todo.');
+        //callback_file_task(file, 'start yet another task...', this.yetAnotherTask.bind(this, file, callback_file_task));
     }
 
 
