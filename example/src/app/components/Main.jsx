@@ -24,23 +24,18 @@ export default class Main extends React.Component {
     }
 
     yetAnotherTask(file, callback_file_task){
-        this._fileUploadTimer = this._fileUploadTimer || 0;
-        this._fileUploadTimer = this._fileUploadTimer + 1000;
+        //this._fileUploadTimer = this._fileUploadTimer || 0;
+        //this._fileUploadTimer = this._fileUploadTimer + Math.random() * 2000;
         setTimeout(() => {
-            callback_file_task('yet another task done!');
-        }, this._fileUploadTimer);
+            callback_file_task(file, 'yet another task done!');
+        }, Math.random() * 5000);
     }
 
     handleFileLoaded(file, file_content, callback_file_task) {
         //console.log(file, file_content, callback_file_loaded);
-        callback_file_task(file, 'did not define a task. nothing todo.');
-        //callback_file_task(file, 'start yet another task...', this.yetAnotherTask.bind(this, file, callback_file_task));
+        //callback_file_task(file, 'did not define a task. nothing todo.');
+        callback_file_task(file, 'start yet another task...', this.yetAnotherTask.bind(this, file, callback_file_task));
     }
-
-
-    /* <FileUpload
-     onDrop={this.handleFileUploadDrop.bind(this)}
-     dropMessage="Dropped!"/>*/
 
     render() {
         return (<div>

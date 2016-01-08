@@ -12,7 +12,7 @@ import LinearProgress from 'material-ui/lib/linear-progress';
 import { List, ListItem } from 'material-ui/lib/lists';
 import Divider from 'material-ui/lib/divider';
 
-import { FileFileUpload } from 'material-ui/lib/svg-icons';
+import { FileFileUpload, ActionDone, ActionDoneAll, ActionHourglassEmpty, ActionHourglassFull } from 'material-ui/lib/svg-icons';
 import { FileTypeUnknown, FileTypePdf, FileTypeText, FileTypeImage } from './svg_icons';
 
 
@@ -162,21 +162,19 @@ export default class FileStorage extends React.Component{
         if (typeof message === 'string') {
             new_message.push(' | ' + message);
             if (next_task)
-                new_message.unshift(<LinearProgress />);
+                new_message.unshift(<LinearProgress key={Math.random()}/>);
         }
 
         this.setState({
             file_states: Object.assign(this.state.file_states, {[(() => file.name)()]: {
                 message: new_message,
-                is_processing: next_task ? true : false
+                secondary_text_lines: next_task ? 2 : 1,
+                right_icon: next_task ? <ActionHourglassEmpty key={Math.random()}/> : <ActionDoneAll key={Math.random()}/>
             }})
         });
 
-        if (next_task){
-            console.log('now run the next task!');
-            //next_task(file, this._callbackFileTask.bind(this));
-        }
-
+        if (next_task)
+            next_task(file, this._callbackFileTask.bind(this));
     }
 
 
@@ -200,7 +198,7 @@ export default class FileStorage extends React.Component{
             }
         }
 
-        return <Avatar icon={icon} />;
+        return <Avatar key={Math.random()} icon={icon} />;
     }
 
     static get _styles(){
@@ -292,8 +290,9 @@ export default class FileStorage extends React.Component{
                                 return(<div key={'queue_list_item_' + i}>
                                     <Divider inset={true} />
                                     <ListItem primaryText={file.name}
-                                              secondaryTextLines={this.state.file_states[file.name].is_processing ? 2 : 1}
+                                              secondaryTextLines={this.state.file_states[file.name].secondary_text_lines}
                                               secondaryText={this.state.file_states[file.name].message}
+                                              rightIcon={this.state.file_states[file.name].right_icon}
                                               leftAvatar={FileStorage._getIRelevantFileTypeIcon(file.type)} />
                                 </div>);
                             })
