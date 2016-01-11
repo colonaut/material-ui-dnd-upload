@@ -144,6 +144,7 @@ export default class FileStorage extends React.Component{
         this.setState({
             is_idle: true,
             is_processing: false, //will not be needed when we start building left side
+            processed_files_count: 0,
             box_style_key: 'idle',
             queue: [],
             file_states: [],
@@ -166,6 +167,7 @@ export default class FileStorage extends React.Component{
         }
 
         this.setState({
+            processed_files_count: !next_task  ? this.state.processed_files_count + 1 : this.state.processed_files_count, //TODO: || error oder sonstiger abbruch
             file_states: Object.assign(this.state.file_states, {[(() => file.name)()]: {
                 message: new_message,
                 secondary_text_lines: next_task ? 2 : 1,
@@ -175,6 +177,9 @@ export default class FileStorage extends React.Component{
 
         if (next_task)
             next_task(file, this._callbackFileTask.bind(this));
+        else if (this.state.queue.length === this.state.processed_files_count)
+            this.setState({box_style_key: 'processed'});
+
     }
 
 
@@ -296,6 +301,8 @@ export default class FileStorage extends React.Component{
                         <p style={{textAlign: 'center', fontSize: '1.5em', fontWeight: 'bold', margin: '0'}}>
                             {this.state.message}
                         </p>
+
+                        {this.state.box_style_key}
 
                         {/*
                         <div style={{border: '1px solid ' + temp_colors.accent1Color, margin:'5px'}}>a 1</div>
