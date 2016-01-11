@@ -89,7 +89,7 @@ export default class FileStorage extends React.Component{
         //console.log('drop', event);
         event.stopPropagation();
         event.preventDefault();
-        if (this.state.is_idle) { //only do drop stuff if there is something done on drop
+        if (this.state.is_idle || this.props.allowQueueUpdate) { //only do drop stuff if there is something done on drop
             let has_processing_callback = typeof this.props.onLoaded === 'function';
             this.setState({
                 box_style_key: 'drop',
@@ -205,7 +205,8 @@ export default class FileStorage extends React.Component{
         const _inner_containers = {
             boxSizing: 'border-box',
             display: 'table',
-            margin: 'auto',
+            marginLeft: 'auto',
+            marginRight: 'auto',
             minWidth: '250px',
             maxWidth: '600px',
             width: '100%',
@@ -213,22 +214,23 @@ export default class FileStorage extends React.Component{
         };
 
         const drag_box = {
-            idle: Object.assign({ minHeight: '200px', borderWidth: '3px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers),
+            idle: Object.assign({ minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers),
             drag_enter: Object.assign({ minHeight: '200px', borderWidth: '3px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers),
             drag_over: Object.assign({ minHeight: '200px', borderWidth: '3px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers),
             drop: Object.assign({ minHeight: '200px' }, _inner_containers),
             processed: Object.assign({ minHeight: '200px' }, _inner_containers)
         };
         const queue_box = {
-            idle: Object.assign({ marginTop: '1em', display: 'none'}, _inner_containers),
-            drag_enter: Object.assign({ display: 'none'}, _inner_containers),
-            drag_over: Object.assign({ display: 'none'}, _inner_containers),
-            drop: Object.assign({ marginTop: '1em', borderWidth: '1px', borderStyle: 'solid', borderRadius: '2px' }, _inner_containers),
-            processed: Object.assign({ marginTop: '1em', borderWidth: '1px', borderStyle: 'solid', borderRadius: '2px' }, _inner_containers)
+            //idle: {display: 'none'},
+            idle: Object.assign({ marginTop: '0.3em', borderWidth: '1px', borderStyle: 'solid', borderRadius: '2px' }, _inner_containers),
+            drag_enter: { display: 'none'},
+            drag_over: { display: 'none'},
+            drop: Object.assign({ marginTop: '0.3em', borderWidth: '1px', borderStyle: 'solid', borderRadius: '2px' }, _inner_containers),
+            processed: Object.assign({ marginTop: '0.3em', borderWidth: '1px', borderStyle: 'solid', borderRadius: '2px' }, _inner_containers)
         };
 
         return {
-            canvas: { boxSizing: 'border-box', padding: '2em 0', border: '1px solid #f0f'},
+            canvas: { boxSizing: 'border-box', padding: '2em 1em'},
             drag_box: drag_box,
             queue_box: queue_box
         };
@@ -237,16 +239,30 @@ export default class FileStorage extends React.Component{
     static _mergeRelevantContextStyles(mui_theme){
         const styles = FileStorage._styles;
         let raw_theme = mui_theme.rawTheme;
-
-        console.log('the raw theme:', raw_theme);
-        //TODO: apply colors from theme
+        //console.log('the raw theme:', raw_theme);
 
         Object.assign(styles.canvas, {
             fontFamily: raw_theme.fontFamily,
             backgroundColor: raw_theme.palette.accent2Color
         });
         Object.assign(styles.drag_box.idle, {
-            color: raw_theme.palette.borderColor, borderColor: raw_theme.palette.borderColor
+            color: raw_theme.palette.primary3Color, borderColor: raw_theme.palette.primary3Color
+        });
+        Object.assign(styles.drag_box.drag_enter, {
+            color: raw_theme.palette.accent3Color, borderColor: raw_theme.palette.accent3Color
+        });
+        Object.assign(styles.drag_box.drag_over, {
+            color: raw_theme.palette.accent3Color, borderColor: raw_theme.palette.accent3Color
+        });
+        Object.assign(styles.drag_box.drop, {
+            color: raw_theme.palette.primary1Color, borderColor: raw_theme.palette.primary1Color
+        });
+        Object.assign(styles.drag_box.processed, {
+            color: raw_theme.palette.primary2Color, borderColor: raw_theme.palette.primary2Color
+        });
+
+        Object.assign(styles.queue_box.idle, { //tmp for test only
+            borderColor: raw_theme.palette.borderColor, backgroundColor: raw_theme.palette.canvasColor
         });
         Object.assign(styles.queue_box.drop, {
             borderColor: raw_theme.palette.borderColor, backgroundColor: raw_theme.palette.canvasColor
@@ -261,7 +277,7 @@ export default class FileStorage extends React.Component{
 
     render() {
         let merged_styles = this.constructor._mergeRelevantContextStyles(this.state.muiTheme);
-        console.log('the merged style:', merged_styles);
+        //console.log('the merged style:', merged_styles);
 
         return(
             <div onClick={this.handleClick.bind(this)}
@@ -273,15 +289,23 @@ export default class FileStorage extends React.Component{
 
                     <div style={merged_styles.drag_box[this.state.box_style_key]}>
 
+                        <FileFileUpload style={{width:'16%', height: '16%',
+                                            display: 'table', margin: '5% auto 0 auto'}}
+                                        color={merged_styles.drag_box[this.state.box_style_key].color}/>
 
-                        <Avatar style={{margin: '0 50%'}}
-                            backgroundColor={merged_styles.drag_box[this.state.box_style_key].borderColor}
-                                icon={<FileFileUpload />} />
-
-                        <p style={{textAlign: 'center', fontSize: '1.5em', fontWeight: 'bold', margin: '0.5em auto'}}>
+                        <p style={{textAlign: 'center', fontSize: '1.5em', fontWeight: 'bold', margin: '0'}}>
                             {this.state.message}
                         </p>
 
+                        {/*
+                        <div style={{border: '1px solid ' + temp_colors.accent1Color, margin:'5px'}}>a 1</div>
+                        <div style={{border: '1px solid ' + temp_colors.accent2Color, margin:'5px'}}>a 2</div>
+                        <div style={{border: '1px solid ' + temp_colors.accent3Color, margin:'5px'}}>a 3</div>
+
+                        <div style={{border: '1px solid ' + temp_colors.primary1Color, margin:'5px'}}>p 1</div>
+                        <div style={{border: '1px solid ' + temp_colors.primary2Color, margin:'5px'}}>p 2</div>
+                        <div style={{border: '1px solid ' + temp_colors.primary3Color, margin:'5px'}}>p 3</div>
+                         */}
 
                         <div style={{display: this.state.is_processing ? 'block' : 'none'
                         }}>

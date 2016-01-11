@@ -6,8 +6,6 @@ import DarkRawTheme from 'material-ui/lib/styles/raw-themes/dark-raw-theme';
 import RaisedButton from 'material-ui/lib/raised-button';
 import FileStorage from '../../../../src/FileStorage.jsx';
 
-//
-
 export default class Main extends React.Component {
     // Important! provide uiTheme context for children (static...) http://material-ui.com/#/customization/themes
     static get childContextTypes() {
@@ -42,6 +40,7 @@ export default class Main extends React.Component {
             <FileStorage
                 onLoaded={this.handleFileLoaded.bind(this)}
                 idleMessage="Your files go here, dude!"
+                allowQueueUpdate={true}
                 dropMessage="Dropped!"/>
 
         </div>);
