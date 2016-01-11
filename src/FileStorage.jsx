@@ -202,29 +202,33 @@ export default class FileStorage extends React.Component{
     }
 
     static get _styles(){
-        const _float_boxes = {
+        const _inner_containers = {
             boxSizing: 'border-box',
-            float: 'left',
+            display: 'table',
+            margin: 'auto',
+            minWidth: '250px',
+            maxWidth: '600px',
+            width: '100%',
             padding: '5px'
         };
 
         const drag_box = {
-            idle: Object.assign({ width: '100%', minWidth: '300px', minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '10px' }, _float_boxes),
-            drag_enter: Object.assign({ width: '100%', minWidth: '300px', minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '5px' }, _float_boxes),
-            drag_over: Object.assign({ width: '100%', minWidth: '300px', minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '5px' }, _float_boxes),
-            drop: Object.assign({ width: '50%', minWidth: '250px', minHeight: '200px' }, _float_boxes),
-            processed: Object.assign({ width: '50%', minWidth: '250px', minHeight: '200px' }, _float_boxes)
+            idle: Object.assign({ minHeight: '200px', borderWidth: '3px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers),
+            drag_enter: Object.assign({ minHeight: '200px', borderWidth: '3px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers),
+            drag_over: Object.assign({ minHeight: '200px', borderWidth: '3px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers),
+            drop: Object.assign({ minHeight: '200px' }, _inner_containers),
+            processed: Object.assign({ minHeight: '200px' }, _inner_containers)
         };
         const queue_box = {
-            idle: Object.assign({display: 'none'}, _float_boxes),
-            drag_enter: Object.assign({display: 'none'}, _float_boxes),
-            drag_over: Object.assign({display: 'none'}, _float_boxes),
-            drop: Object.assign({ width: '50%', minWidth: '150px', minHeight: '200px', borderWidth: '1px', borderStyle: 'solid', borderRadius: '2px' }, _float_boxes),
-            processed: Object.assign({ width: '50%', minWidth: '150px', minHeight: '200px', borderWidth: '1px', borderStyle: 'solid', borderRadius: '2px' }, _float_boxes)
+            idle: Object.assign({ marginTop: '1em', display: 'none'}, _inner_containers),
+            drag_enter: Object.assign({ display: 'none'}, _inner_containers),
+            drag_over: Object.assign({ display: 'none'}, _inner_containers),
+            drop: Object.assign({ marginTop: '1em', borderWidth: '1px', borderStyle: 'solid', borderRadius: '2px' }, _inner_containers),
+            processed: Object.assign({ marginTop: '1em', borderWidth: '1px', borderStyle: 'solid', borderRadius: '2px' }, _inner_containers)
         };
 
         return {
-            canvas: { boxSizing: 'border-box' },
+            canvas: { boxSizing: 'border-box', padding: '2em 0', border: '1px solid #f0f'},
             drag_box: drag_box,
             queue_box: queue_box
         };
@@ -234,21 +238,21 @@ export default class FileStorage extends React.Component{
         const styles = FileStorage._styles;
         let raw_theme = mui_theme.rawTheme;
 
-        //console.log('the raw theme:', raw_theme);
+        console.log('the raw theme:', raw_theme);
         //TODO: apply colors from theme
 
         Object.assign(styles.canvas, {
             fontFamily: raw_theme.fontFamily,
-            backgroundColor: raw_theme.canvasColor
+            backgroundColor: raw_theme.palette.accent2Color
         });
         Object.assign(styles.drag_box.idle, {
-           borderColor: raw_theme.palette.borderColor
+            color: raw_theme.palette.borderColor, borderColor: raw_theme.palette.borderColor
         });
         Object.assign(styles.queue_box.drop, {
-            borderColor: raw_theme.palette.borderColor
+            borderColor: raw_theme.palette.borderColor, backgroundColor: raw_theme.palette.canvasColor
         });
         Object.assign(styles.queue_box.processed, {
-            borderColor: raw_theme.palette.borderColor
+            borderColor: raw_theme.palette.borderColor, backgroundColor: raw_theme.palette.canvasColor
         });
 
         return styles;
@@ -257,7 +261,7 @@ export default class FileStorage extends React.Component{
 
     render() {
         let merged_styles = this.constructor._mergeRelevantContextStyles(this.state.muiTheme);
-        //console.log('the merged style:', merged_styles);
+        console.log('the merged style:', merged_styles);
 
         return(
             <div onClick={this.handleClick.bind(this)}
@@ -267,40 +271,43 @@ export default class FileStorage extends React.Component{
                  onDrop={this.handleDrop.bind(this)}
                  style={merged_styles.canvas}>
 
-                <div style={merged_styles.drag_box[this.state.box_style_key]}>
+                    <div style={merged_styles.drag_box[this.state.box_style_key]}>
 
-                    <div style={{display: this.state.message ? 'block' : 'none'
+
+                        <Avatar style={{margin: '0 50%'}}
+                            backgroundColor={merged_styles.drag_box[this.state.box_style_key].borderColor}
+                                icon={<FileFileUpload />} />
+
+                        <p style={{textAlign: 'center', fontSize: '1.5em', fontWeight: 'bold', margin: '0.5em auto'}}>
+                            {this.state.message}
+                        </p>
+
+
+                        <div style={{display: this.state.is_processing ? 'block' : 'none'
                         }}>
-                        <p style={{}}>{this.state.message}</p>
+                            <CircularProgress mode="indeterminate" />
+                        </div>
                     </div>
 
-                    <div style={{display: this.state.is_processing ? 'block' : 'none'
-                    }}>
-                        <CircularProgress mode="indeterminate" />
+                    <div style={merged_styles.queue_box[this.state.box_style_key]}>
+                        <List subheader="Queued files">
+                            {
+                                this.state.queue.map((file, i) => {
+                                    return(<div key={'queue_list_item_' + i}>
+                                        <Divider inset={true} />
+                                        <ListItem primaryText={file.name}
+                                                  secondaryTextLines={this.state.file_states[file.name].secondary_text_lines}
+                                                  secondaryText={this.state.file_states[file.name].message}
+                                                  rightIcon={this.state.file_states[file.name].right_icon}
+                                                  leftAvatar={FileStorage._getIRelevantFileTypeIcon(file.type)} />
+                                    </div>);
+                                })
+                            }
+                        </List>
                     </div>
 
-                </div>
+                    <div style={{clear: 'both'}}></div>
 
-
-                <div style={merged_styles.queue_box[this.state.box_style_key]}>
-
-                    <List subheader="Queued files">
-                        {
-                            this.state.queue.map((file, i) => {
-                                return(<div key={'queue_list_item_' + i}>
-                                    <Divider inset={true} />
-                                    <ListItem primaryText={file.name}
-                                              secondaryTextLines={this.state.file_states[file.name].secondary_text_lines}
-                                              secondaryText={this.state.file_states[file.name].message}
-                                              rightIcon={this.state.file_states[file.name].right_icon}
-                                              leftAvatar={FileStorage._getIRelevantFileTypeIcon(file.type)} />
-                                </div>);
-                            })
-                        }
-                    </List>
-                </div>
-
-                <div style={{clear: 'both'}}></div>
 
             </div>);
     }
