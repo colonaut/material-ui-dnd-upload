@@ -79,7 +79,7 @@ export default class FileStorage extends React.Component{
     }
 
     handleDragExit(event){
-        //console.log('drag exit');
+        console.log('drag exit');
         event.preventDefault();
         event.preventDefault();
         this._reset_states();
@@ -90,7 +90,7 @@ export default class FileStorage extends React.Component{
         event.stopPropagation();
         event.preventDefault();
         if (this.state.is_idle || this.props.allowQueueUpdate) { //only do drop stuff if there is something done on drop
-            let has_processing_callback = typeof this.props.onLoaded === 'function';
+            let has_processing_callback = typeof this.props.onFileLoaded === 'function';
             this.setState({
                 box_style_key: 'drop',
                 message: null,
@@ -105,7 +105,7 @@ export default class FileStorage extends React.Component{
                     return (evt) => {
                         this._update_queue(transfer_file);
                         if (has_processing_callback){
-                            this.props.onLoaded(
+                            this.props.onFileLoaded(
                                 loaded_file,
                                 evt.target.result,
                                 this._callbackFileTask.bind(this));
@@ -137,7 +137,7 @@ export default class FileStorage extends React.Component{
             this.setState({
                 queue: new_queue
             });
-        }, this.state.queue.length * 200 + 200);
+        }, 0);//this.state.queue.length * 200 + 200);
     }
 
     _reset_states() {
@@ -158,32 +158,50 @@ export default class FileStorage extends React.Component{
         //It's a hook for outside to i.e. pass a message
         // Do NOT do things for the component here!
         next_task = typeof next_task === 'function' ? next_task : typeof message === 'function' ? message : undefined;
-        let error = message instanceof Error ? message : null;
+        let error = message instanceof Error ? message : null,
+            right_icon = <ActionDoneAll key={Math.random()}/>,
+            new_message = [file.size + ' bytes'],
+            processed_files_count = this.state.processed_files_count,
+            processed_tasks_count = 0,
+            secondary_text_lines = 1,
+            box_style_key = 'drop';
 
-        //let right_icon =
-        let new_message = [file.size + ' bytes'];
         if (error) {
-            new_message.push(<span style={{color: '#800000', float: 'right'}}>{error.message}</span>);
-        } else if (typeof message === 'string') {
-            new_message.push(<span style={{color: this.state.muiTheme.rawTheme.palette.primary1Color, float: 'right'}}>{message}</span>);
-            if (next_task)
-                new_message.unshift(<LinearProgress key={Math.random()}/>);
+            new_message.push(<span key={Math.random()} style={{
+                color: '#DD2C00',
+                float: 'right'
+            }}>{error.message}</span>);
+            right_icon = <AlertErrorOutline color="#DD2C00" />;
+        } else {
+            processed_tasks_count = this.state.file_states[file.name] ?
+                this.state.file_states[file.name].processed_tasks_count + 1 : 1;
+            if (typeof message === 'string') {
+                new_message.push(<span key={Math.random()} style={{
+                    color: this.state.muiTheme.rawTheme.palette.primary1Color,
+                    float: 'right'
+                }}>{message} ({processed_tasks_count})</span>);
+            }
         }
 
-        if (next_task && !error)
+        if (next_task && !error){
+            right_icon = <ActionHourglassEmpty key={Math.random()} color={this.state.muiTheme.rawTheme.palette.primary1Color}/>;
+            secondary_text_lines++;
+            new_message.unshift(<LinearProgress key={Math.random()}/>);
             next_task(file, this._callbackFileTask.bind(this));
-        else if (this.state.queue.length === this.state.processed_files_count)
-            this.setState({box_style_key: 'processed'});
+        } else {
+            processed_files_count++;
+            if (this.state.queue.length === processed_files_count)
+                box_style_key = 'processed';
+        }
 
         this.setState({
-            processed_files_count: !next_task  ? this.state.processed_files_count + 1
-                : this.state.processed_files_count, //TODO: || error oder sonstiger abbruch
+            box_style_key: box_style_key,
+            processed_files_count: processed_files_count,
             file_states: Object.assign(this.state.file_states, {[(() => file.name)()]: {
+                processed_tasks_count: processed_tasks_count,
                 message: new_message,
-                secondary_text_lines: next_task && !error ? 2 : 1,
-                right_icon: error ? <AlertErrorOutline />
-                    : next_task ? <ActionHourglassEmpty key={Math.random()}/>
-                    : <ActionDoneAll key={Math.random()}/>
+                secondary_text_lines: secondary_text_lines,
+                right_icon: right_icon
             }})
         });
 
@@ -229,10 +247,10 @@ export default class FileStorage extends React.Component{
 
         const drag_box = {
             idle: Object.assign({ minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers),
-            drag_enter: Object.assign({ minHeight: '200px', borderWidth: '3px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers),
-            drag_over: Object.assign({ minHeight: '200px', borderWidth: '3px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers),
-            drop: Object.assign({ minHeight: '200px' }, _inner_containers),
-            processed: Object.assign({ minHeight: '200px' }, _inner_containers)
+            drag_enter: Object.assign({ minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers),
+            drag_over: Object.assign({ minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers),
+            drop: Object.assign({ minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers),
+            processed: Object.assign({ minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers)
         };
         const queue_box = {
             //idle: {display: 'none'},

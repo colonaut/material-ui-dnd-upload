@@ -46,13 +46,13 @@ export default class Main extends React.Component {
     render() {
         return (<div>
             <FileStorage
-                onLoaded={this.handleFileLoaded.bind(this)}
+                onFileLoaded={this.handleFileLoaded.bind(this)}
                 idleMessage="Your files go here, dude!"
                 dropMessage="Dropped!"
-                maxSimultaniousFiles="10" //TODO
-                maxFiles="20" //TODO
-
+                maxConcurrentProcessedFiles="10" //TODO
+                maxQueuedFiles="20" //TODO
                 allowQueueUpdate={true}
+
                 />
 
         </div>);
