@@ -21,12 +21,20 @@ export default class Main extends React.Component {
         };
     }
 
-    yetAnotherTask(file, callback_file_task){
-        //this._fileUploadTimer = this._fileUploadTimer || 0;
-        //this._fileUploadTimer = this._fileUploadTimer + Math.random() * 2000;
+    anotherTaskWithError(file, callback_file_task){
+        this._fileUploadTimer = this._fileUploadTimer || 0;
+        this._fileUploadTimer = this._fileUploadTimer + Math.random() * 2000;
         setTimeout(() => {
-            callback_file_task(file, 'yet another task done!');
-        }, Math.random() * 5000);
+            callback_file_task(file, new Error('Error!'));
+        }, Math.random() * this._fileUploadTimer);
+    }
+
+    yetAnotherTask(file, callback_file_task){
+        this._fileUploadTimer = this._fileUploadTimer || 0;
+        this._fileUploadTimer = this._fileUploadTimer + Math.random() * 2000;
+        setTimeout(() => {
+            callback_file_task(file, 'yet another task done! start another task with error task', this.anotherTaskWithError.bind(this, file, callback_file_task));
+        }, Math.random() * this._fileUploadTimer );
     }
 
     handleFileLoaded(file, file_content, callback_file_task) {
@@ -40,8 +48,12 @@ export default class Main extends React.Component {
             <FileStorage
                 onLoaded={this.handleFileLoaded.bind(this)}
                 idleMessage="Your files go here, dude!"
+                dropMessage="Dropped!"
+                maxSimultaniousFiles="10" //TODO
+                maxFiles="20" //TODO
+
                 allowQueueUpdate={true}
-                dropMessage="Dropped!"/>
+                />
 
         </div>);
     }

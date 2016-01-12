@@ -12,7 +12,7 @@ import LinearProgress from 'material-ui/lib/linear-progress';
 import { List, ListItem } from 'material-ui/lib/lists';
 import Divider from 'material-ui/lib/divider';
 
-import { FileFileUpload, ActionDone, ActionDoneAll, ActionHourglassEmpty, ActionHourglassFull } from 'material-ui/lib/svg-icons';
+import { FileFileUpload, ActionDone, ActionDoneAll, ActionHourglassEmpty, ActionHourglassFull, AlertErrorOutline } from 'material-ui/lib/svg-icons';
 import { FileTypeUnknown, FileTypePdf, FileTypeText, FileTypeImage } from './svg_icons';
 
 
@@ -158,27 +158,36 @@ export default class FileStorage extends React.Component{
         //It's a hook for outside to i.e. pass a message
         // Do NOT do things for the component here!
         next_task = typeof next_task === 'function' ? next_task : typeof message === 'function' ? message : undefined;
+        let error = message instanceof Error ? message : null;
 
+        //let right_icon =
         let new_message = [file.size + ' bytes'];
-        if (typeof message === 'string') {
-            new_message.push(' | ' + message);
+        if (error) {
+            new_message.push(<span style={{color: '#800000', float: 'right'}}>{error.message}</span>);
+        } else if (typeof message === 'string') {
+            new_message.push(<span style={{color: this.state.muiTheme.rawTheme.palette.primary1Color, float: 'right'}}>{message}</span>);
             if (next_task)
                 new_message.unshift(<LinearProgress key={Math.random()}/>);
         }
 
-        this.setState({
-            processed_files_count: !next_task  ? this.state.processed_files_count + 1 : this.state.processed_files_count, //TODO: || error oder sonstiger abbruch
-            file_states: Object.assign(this.state.file_states, {[(() => file.name)()]: {
-                message: new_message,
-                secondary_text_lines: next_task ? 2 : 1,
-                right_icon: next_task ? <ActionHourglassEmpty key={Math.random()}/> : <ActionDoneAll key={Math.random()}/>
-            }})
-        });
-
-        if (next_task)
+        if (next_task && !error)
             next_task(file, this._callbackFileTask.bind(this));
         else if (this.state.queue.length === this.state.processed_files_count)
             this.setState({box_style_key: 'processed'});
+
+        this.setState({
+            processed_files_count: !next_task  ? this.state.processed_files_count + 1
+                : this.state.processed_files_count, //TODO: || error oder sonstiger abbruch
+            file_states: Object.assign(this.state.file_states, {[(() => file.name)()]: {
+                message: new_message,
+                secondary_text_lines: next_task && !error ? 2 : 1,
+                right_icon: error ? <AlertErrorOutline />
+                    : next_task ? <ActionHourglassEmpty key={Math.random()}/>
+                    : <ActionDoneAll key={Math.random()}/>
+            }})
+        });
+
+
 
     }
 
