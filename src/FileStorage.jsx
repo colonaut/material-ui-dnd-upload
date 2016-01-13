@@ -155,42 +155,41 @@ export default class FileStorage extends React.Component{
 
     _callbackFileTask(file, message, next_task){
         //This is the optional re-passed callback for one single file, when it is loaded.
-        //It's a hook for outside to i.e. pass a message
-        // Do NOT do things for the component here!
+        //It's a hook for outside to i.e. pass a message or start a processing chain
         next_task = typeof next_task === 'function' ? next_task : typeof message === 'function' ? message : undefined;
         let error = message instanceof Error ? message : null,
             right_icon = <ActionDoneAll key={Math.random()} color="#4caf50"/>,
-            new_message = [file.size + ' bytes'],
+            new_message_parts = [file.size + ' bytes'],
+            new_message = <div style={{border: '1px solid #0f0',
+            width: '50%',
+            minWidth: '200px',
+            textOverflow: 'ellipsis'}}>{new_message_parts}</div>,
             processed_files_count = this.state.processed_files_count,
             processed_tasks_count = 0,
             secondary_text_lines = 1,
             box_style_key = 'drop';
 
         if (error) {
-            new_message.push(<div key={Math.random()} style={{
+            new_message_parts.push(<span key={Math.random()} style={{
                 color: '#DD2C00',
                 textAlign: 'right'
-            }}>{error.message}</div>);
+            }}>{error.message}</span>);
             right_icon = <AlertErrorOutline color="#DD2C00" />;
         } else {
             processed_tasks_count = this.state.file_states[file.name] ?
                 this.state.file_states[file.name].processed_tasks_count + 1 : 1;
             if (typeof message === 'string') {
-                new_message.push(<div key={Math.random()} style={{
+                new_message_parts.push(<span key={Math.random()} style={{
                     color: this.state.muiTheme.rawTheme.palette.primary1Color,
-                    border: '1px solid #0f0',
-                    //float: 'right',
-                    overflow: 'hidden',
-                    whiteSpace: 'nowrap',
-                    textOverflow: 'ellipsis',
-                }}>{message} ({processed_tasks_count})</div>);
+                    textAlign: 'right'
+                }}>{message}</span>);
             }
         }
 
         if (next_task && !error){
             right_icon = <CircularProgress mode="indeterminate" size={0.5} style={{margin: 'auto 25px auto auto', top: '10px'}}/>,
             //right_icon = <ActionHourglassEmpty key={Math.random()} color={this.state.muiTheme.rawTheme.palette.primary1Color}/>;
-            secondary_text_lines++;
+            //secondary_text_lines++;
             //new_message.unshift(<LinearProgress key={Math.random()}/>);
             next_task(file, this._callbackFileTask.bind(this));
         } else {
@@ -351,7 +350,7 @@ export default class FileStorage extends React.Component{
                                     return(<div key={'queue_list_item_' + i}>
                                         <Divider inset={true} />
                                         <ListItem style={{}}
-                                                  primaryText={<div style={{whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{file.name}</div>}
+                                                  primaryText={file.name}
                                                   secondaryTextLines={this.state.file_states[file.name].secondary_text_lines}
                                                   secondaryText={this.state.file_states[file.name].message}
                                                   rightIcon={this.state.file_states[file.name].right_icon}

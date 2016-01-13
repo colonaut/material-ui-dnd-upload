@@ -25,7 +25,8 @@ export default class Main extends React.Component {
         this._fileUploadTimer = this._fileUploadTimer || 0;
         this._fileUploadTimer = this._fileUploadTimer + Math.random() * 2000;
         setTimeout(() => {
-            callback_file_task(file, new Error('Error!'));
+            //callback_file_task(file, new Error('Error!'));
+            callback_file_task(file, 'jlsfj dfj ldjf douf ojf osduf uf dsuhofgf dsfgdsou fosdiufh dsofu dfiud fsdfhsdufd fdijd');
         }, Math.random() * this._fileUploadTimer);
     }
 
@@ -33,7 +34,7 @@ export default class Main extends React.Component {
         this._fileUploadTimer = this._fileUploadTimer || 0;
         this._fileUploadTimer = this._fileUploadTimer + Math.random() * 2000;
         setTimeout(() => {
-            callback_file_task(file, 'yet another task done! start another task with error task');//, this.anotherTaskWithError.bind(this, file, callback_file_task));
+            callback_file_task(file, 'yet another task done! start another task with error task', this.anotherTaskWithError.bind(this, file, callback_file_task));
         }, Math.random() * this._fileUploadTimer );
     }
 
