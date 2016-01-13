@@ -159,7 +159,7 @@ export default class FileStorage extends React.Component{
         // Do NOT do things for the component here!
         next_task = typeof next_task === 'function' ? next_task : typeof message === 'function' ? message : undefined;
         let error = message instanceof Error ? message : null,
-            right_icon = <ActionDoneAll key={Math.random()}/>,
+            right_icon = <ActionDoneAll key={Math.random()} color="#4caf50"/>,
             new_message = [file.size + ' bytes'],
             processed_files_count = this.state.processed_files_count,
             processed_tasks_count = 0,
@@ -167,26 +167,31 @@ export default class FileStorage extends React.Component{
             box_style_key = 'drop';
 
         if (error) {
-            new_message.push(<span key={Math.random()} style={{
+            new_message.push(<div key={Math.random()} style={{
                 color: '#DD2C00',
-                float: 'right'
-            }}>{error.message}</span>);
+                textAlign: 'right'
+            }}>{error.message}</div>);
             right_icon = <AlertErrorOutline color="#DD2C00" />;
         } else {
             processed_tasks_count = this.state.file_states[file.name] ?
                 this.state.file_states[file.name].processed_tasks_count + 1 : 1;
             if (typeof message === 'string') {
-                new_message.push(<span key={Math.random()} style={{
+                new_message.push(<div key={Math.random()} style={{
                     color: this.state.muiTheme.rawTheme.palette.primary1Color,
-                    float: 'right'
-                }}>{message} ({processed_tasks_count})</span>);
+                    border: '1px solid #0f0',
+                    //float: 'right',
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap',
+                    textOverflow: 'ellipsis',
+                }}>{message} ({processed_tasks_count})</div>);
             }
         }
 
         if (next_task && !error){
-            right_icon = <ActionHourglassEmpty key={Math.random()} color={this.state.muiTheme.rawTheme.palette.primary1Color}/>;
+            right_icon = <CircularProgress mode="indeterminate" size={0.5} style={{margin: 'auto 25px auto auto', top: '10px'}}/>,
+            //right_icon = <ActionHourglassEmpty key={Math.random()} color={this.state.muiTheme.rawTheme.palette.primary1Color}/>;
             secondary_text_lines++;
-            new_message.unshift(<LinearProgress key={Math.random()}/>);
+            //new_message.unshift(<LinearProgress key={Math.random()}/>);
             next_task(file, this._callbackFileTask.bind(this));
         } else {
             processed_files_count++;
@@ -204,9 +209,6 @@ export default class FileStorage extends React.Component{
                 right_icon: right_icon
             }})
         });
-
-
-
     }
 
 
@@ -319,17 +321,17 @@ export default class FileStorage extends React.Component{
                  onDrop={this.handleDrop.bind(this)}
                  style={merged_styles.canvas}>
 
-                    <div style={merged_styles.drag_box[this.state.box_style_key]}>
 
-                        <FileFileUpload style={{width:'16%', height: '16%',
-                                            display: 'table', margin: '5% auto 0 auto'}}
-                                        color={merged_styles.drag_box[this.state.box_style_key].color}/>
+                    <div style={merged_styles.drag_box[this.state.box_style_key]}>
+                            <FileFileUpload style={{display: 'table',
+                                                width:'16%', height: '16%',
+                                                margin: '5% auto 0 auto'}}
+                                color={merged_styles.drag_box[this.state.box_style_key].color}/>
+
 
                         <p style={{textAlign: 'center', fontSize: '1.5em', fontWeight: 'bold', margin: '0'}}>
-                            {this.state.message}
+                            hallo {this.state.message}
                         </p>
-
-                        {this.state.box_style_key}
 
                         {/*
                         <div style={{border: '1px solid ' + temp_colors.accent1Color, margin:'5px'}}>a 1</div>
@@ -340,11 +342,6 @@ export default class FileStorage extends React.Component{
                         <div style={{border: '1px solid ' + temp_colors.primary2Color, margin:'5px'}}>p 2</div>
                         <div style={{border: '1px solid ' + temp_colors.primary3Color, margin:'5px'}}>p 3</div>
                          */}
-
-                        <div style={{display: this.state.is_processing ? 'block' : 'none'
-                        }}>
-                            <CircularProgress mode="indeterminate" />
-                        </div>
                     </div>
 
                     <div style={merged_styles.queue_box[this.state.box_style_key]}>
@@ -353,7 +350,8 @@ export default class FileStorage extends React.Component{
                                 this.state.queue.map((file, i) => {
                                     return(<div key={'queue_list_item_' + i}>
                                         <Divider inset={true} />
-                                        <ListItem primaryText={file.name}
+                                        <ListItem style={{}}
+                                                  primaryText={<div style={{whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'}}>{file.name}</div>}
                                                   secondaryTextLines={this.state.file_states[file.name].secondary_text_lines}
                                                   secondaryText={this.state.file_states[file.name].message}
                                                   rightIcon={this.state.file_states[file.name].right_icon}
