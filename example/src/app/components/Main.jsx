@@ -3,7 +3,6 @@ import React from 'react';
 import ThemeManager from 'material-ui/lib/styles/theme-manager';
 import DarkRawTheme from 'material-ui/lib/styles/raw-themes/dark-raw-theme';
 
-import RaisedButton from 'material-ui/lib/raised-button';
 import FileStorage from '../../../../src/FileStorage.jsx';
 
 export default class Main extends React.Component {
@@ -34,7 +33,7 @@ export default class Main extends React.Component {
         this._fileUploadTimer = this._fileUploadTimer || 0;
         this._fileUploadTimer = this._fileUploadTimer + Math.random() * 2000;
         setTimeout(() => {
-            callback_file_task(file, 'yet another task done! start another task with error task', this.anotherTaskWithError.bind(this, file, callback_file_task));
+            callback_file_task(file, 'yet another task done! start another task with error task lorum ipsum un do', this.anotherTaskWithError.bind(this, file, callback_file_task));
         }, Math.random() * this._fileUploadTimer );
     }
 

@@ -57,7 +57,6 @@ export default class FileStorage extends React.Component{
     }
 
     handleDragEnter(event){
-        //console.log('drag enter');
         event.preventDefault();
         event.preventDefault();
         if (this.state.is_idle) {
@@ -68,7 +67,6 @@ export default class FileStorage extends React.Component{
     }
 
     handleDragOver(event){
-        //console.log('drag over');
         event.preventDefault();
         event.preventDefault();
         if (this.state.is_idle){
@@ -79,14 +77,12 @@ export default class FileStorage extends React.Component{
     }
 
     handleDragExit(event){
-        console.log('drag exit');
         event.preventDefault();
         event.preventDefault();
         this._reset_states();
     }
 
     handleDrop(event){
-        //console.log('drop', event);
         event.stopPropagation();
         event.preventDefault();
         if (this.state.is_idle || this.props.allowQueueUpdate) { //only do drop stuff if there is something done on drop
@@ -121,9 +117,9 @@ export default class FileStorage extends React.Component{
                 })(transfer_file);
 
                 console.log('determine right method for reader with transfer_file.type:', transfer_file.type);
-                reader.readAsText(transfer_file); //– returns the file contents as plain text
-                //reader.readAsArrayBuffer(file); // – returns the file contents as an ArrayBuffer (good for binary data such as images)
-                //reader.readAsDataURL(file); // – returns the file contents as a data URL
+                reader.readAsText(transfer_file); //ï¿½ returns the file contents as plain text
+                //reader.readAsArrayBuffer(file); // ï¿½ returns the file contents as an ArrayBuffer (good for binary data such as images)
+                //reader.readAsDataURL(file); // ï¿½ returns the file contents as a data URL
             }
         } else if (this.state.is_idle) {
             this._reset_states();
@@ -159,30 +155,27 @@ export default class FileStorage extends React.Component{
         next_task = typeof next_task === 'function' ? next_task : typeof message === 'function' ? message : undefined;
         let error = message instanceof Error ? message : null,
             right_icon = <ActionDoneAll key={Math.random()} color="#4caf50"/>,
-            new_message_parts = [file.size + ' bytes'],
-            new_message = <div style={{border: '1px solid #0f0',
-            width: '50%',
-            minWidth: '200px',
-            textOverflow: 'ellipsis'}}>{new_message_parts}</div>,
+            message_parts = [<span key={Math.random()} style={{
+                    border: '1px solid #f0f'
+                }}>{file.size} bytes</span>],
             processed_files_count = this.state.processed_files_count,
             processed_tasks_count = 0,
             secondary_text_lines = 1,
             box_style_key = 'drop';
 
         if (error) {
-            new_message_parts.push(<span key={Math.random()} style={{
-                color: '#DD2C00',
-                textAlign: 'right'
-            }}>{error.message}</span>);
+            message_parts.push(<span key={Math.random()} style={{
+                    color: '#DD2C00'
+                }}>{error.message}</span>);
             right_icon = <AlertErrorOutline color="#DD2C00" />;
         } else {
             processed_tasks_count = this.state.file_states[file.name] ?
                 this.state.file_states[file.name].processed_tasks_count + 1 : 1;
             if (typeof message === 'string') {
-                new_message_parts.push(<span key={Math.random()} style={{
-                    color: this.state.muiTheme.rawTheme.palette.primary1Color,
-                    textAlign: 'right'
-                }}>{message}</span>);
+                message_parts.push(<span key={Math.random()} style={{
+                        border: '1px solid #00f',
+                        color: this.state.muiTheme.rawTheme.palette.primary1Color
+                    }}>{message}</span>);
             }
         }
 
@@ -203,7 +196,7 @@ export default class FileStorage extends React.Component{
             processed_files_count: processed_files_count,
             file_states: Object.assign(this.state.file_states, {[(() => file.name)()]: {
                 processed_tasks_count: processed_tasks_count,
-                message: new_message,
+                message: message_parts,
                 secondary_text_lines: secondary_text_lines,
                 right_icon: right_icon
             }})
@@ -211,22 +204,22 @@ export default class FileStorage extends React.Component{
     }
 
 
-    static get _icons(){
+    static get _fileTypeIconsMap(){
         return {
             pdf: <FileTypePdf/>,
             image: <FileTypeImage />,
-            text: <FileTypeText color="#FF0" />
+            text: <FileTypeText />
 
         }
     }
 
-    static _getIRelevantFileTypeIcon(file_type){
+    static _getRelevantFileTypeIcon(file_type){
         let icon = <FileTypeUnknown/>;
-        let keys = Object.keys(FileStorage._icons);
+        let keys = Object.keys(FileStorage._fileTypeIconsMap);
 
         for (let i = 0, key; key = keys[i], i < keys.length; i++){
             if (file_type.startsWith(key) || file_type.endsWith(key)) {
-                icon = FileStorage._icons[key];
+                icon = FileStorage._fileTypeIconsMap[key];
                 break;
             }
         }
@@ -237,13 +230,11 @@ export default class FileStorage extends React.Component{
     static get _styles(){
         const _inner_containers = {
             boxSizing: 'border-box',
-            display: 'table',
             marginLeft: 'auto',
             marginRight: 'auto',
             minWidth: '250px',
             maxWidth: '600px',
-            width: '100%',
-            padding: '5px'
+            width: '100%'
         };
 
         const drag_box = {
@@ -320,19 +311,17 @@ export default class FileStorage extends React.Component{
                  onDrop={this.handleDrop.bind(this)}
                  style={merged_styles.canvas}>
 
+                <div style={merged_styles.drag_box[this.state.box_style_key]}>
+                    <FileFileUpload style={{display: 'table',
+                                            width:'16%', height: '16%',
+                                            margin: '5% auto 0 auto'}}
+                                    color={merged_styles.drag_box[this.state.box_style_key].color}/>
 
-                    <div style={merged_styles.drag_box[this.state.box_style_key]}>
-                            <FileFileUpload style={{display: 'table',
-                                                width:'16%', height: '16%',
-                                                margin: '5% auto 0 auto'}}
-                                color={merged_styles.drag_box[this.state.box_style_key].color}/>
+                    <p style={{textAlign: 'center', fontSize: '1.5em', fontWeight: 'bold', margin: '0'}}>
+                        hallo {this.state.message}
+                    </p>
 
-
-                        <p style={{textAlign: 'center', fontSize: '1.5em', fontWeight: 'bold', margin: '0'}}>
-                            hallo {this.state.message}
-                        </p>
-
-                        {/*
+                    {/*
                         <div style={{border: '1px solid ' + temp_colors.accent1Color, margin:'5px'}}>a 1</div>
                         <div style={{border: '1px solid ' + temp_colors.accent2Color, margin:'5px'}}>a 2</div>
                         <div style={{border: '1px solid ' + temp_colors.accent3Color, margin:'5px'}}>a 3</div>
@@ -340,28 +329,25 @@ export default class FileStorage extends React.Component{
                         <div style={{border: '1px solid ' + temp_colors.primary1Color, margin:'5px'}}>p 1</div>
                         <div style={{border: '1px solid ' + temp_colors.primary2Color, margin:'5px'}}>p 2</div>
                         <div style={{border: '1px solid ' + temp_colors.primary3Color, margin:'5px'}}>p 3</div>
-                         */}
-                    </div>
+                    */}
+                </div>
 
-                    <div style={merged_styles.queue_box[this.state.box_style_key]}>
-                        <List subheader="Queued files">
-                            {
-                                this.state.queue.map((file, i) => {
-                                    return(<div key={'queue_list_item_' + i}>
-                                        <Divider inset={true} />
-                                        <ListItem style={{}}
-                                                  primaryText={file.name}
-                                                  secondaryTextLines={this.state.file_states[file.name].secondary_text_lines}
-                                                  secondaryText={this.state.file_states[file.name].message}
-                                                  rightIcon={this.state.file_states[file.name].right_icon}
-                                                  leftAvatar={FileStorage._getIRelevantFileTypeIcon(file.type)} />
-                                    </div>);
-                                })
-                            }
-                        </List>
-                    </div>
+                <List style={merged_styles.queue_box[this.state.box_style_key]}
+                      subheader="Queued files">
+                    {
+                        this.state.queue.map((file, i) => {
+                            return(<div key={'queue_list_item_' + i}>
+                                <Divider inset={true} />
+                                <ListItem primaryText={file.name}
+                                          secondaryTextLines={this.state.file_states[file.name].secondary_text_lines}
+                                          secondaryText={this.state.file_states[file.name].message}
+                                          rightIcon={this.state.file_states[file.name].right_icon}
+                                          leftAvatar={FileStorage._getRelevantFileTypeIcon(file.type)} />
+                            </div>);
+                        })
+                    }
+                </List>
 
-                    <div style={{clear: 'both'}}></div>
 
 
             </div>);
