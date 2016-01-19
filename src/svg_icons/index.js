@@ -6,3 +6,4 @@ export {default as FileTypePdf} from './file_type/Pdf.jsx';
 export {default as FileTypeText} from './file_type/Text.jsx';
 export {default as FileTypeImage} from './file_type/Image.jsx';
 
+

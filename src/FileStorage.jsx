@@ -13,8 +13,8 @@ import { List, ListItem } from 'material-ui/lib/lists';
 import Divider from 'material-ui/lib/divider';
 
 import { FileFileUpload, ActionDone, ActionDoneAll, ActionHourglassEmpty, ActionHourglassFull, AlertErrorOutline } from 'material-ui/lib/svg-icons';
-import { FileTypeUnknown, FileTypePdf, FileTypeText, FileTypeImage } from './svg_icons';
-
+import * as FileTypeIcons from './svg_icons';
+import FILE_TYPE_ICON_MAP from './svg_icons/file_type_icon_map';
 
 export default class FileStorage extends React.Component{
     constructor(props) {
@@ -77,6 +77,12 @@ export default class FileStorage extends React.Component{
     }
 
     handleDragExit(event){
+        event.preventDefault();
+        event.preventDefault();
+        this._reset_states();
+    }
+    handleDragLeave(event){
+        console.log('drag leave');
         event.preventDefault();
         event.preventDefault();
         this._reset_states();
@@ -180,7 +186,7 @@ export default class FileStorage extends React.Component{
         }
 
         if (next_task && !error){
-            right_icon = <CircularProgress mode="indeterminate" size={0.5} style={{margin: 'auto 25px auto auto', top: '10px'}}/>,
+            right_icon = <CircularProgress mode="indeterminate" size={0.5} style={{margin: 'auto 25px auto auto', top: '10px'}}/>;
             //right_icon = <ActionHourglassEmpty key={Math.random()} color={this.state.muiTheme.rawTheme.palette.primary1Color}/>;
             //secondary_text_lines++;
             //new_message.unshift(<LinearProgress key={Math.random()}/>);
@@ -204,22 +210,13 @@ export default class FileStorage extends React.Component{
     }
 
 
-    static get _fileTypeIconsMap(){
-        return {
-            pdf: <FileTypePdf/>,
-            image: <FileTypeImage />,
-            text: <FileTypeText />
-
-        }
-    }
-
     static _getRelevantFileTypeIcon(file_type){
-        let icon = <FileTypeUnknown/>;
-        let keys = Object.keys(FileStorage._fileTypeIconsMap);
+        let icon = <FileTypeIcons.FileTypeUnknown/>;
+        let keys = Object.keys(FILE_TYPE_ICON_MAP);
 
         for (let i = 0, key; key = keys[i], i < keys.length; i++){
             if (file_type.startsWith(key) || file_type.endsWith(key)) {
-                icon = FileStorage._fileTypeIconsMap[key];
+                icon = FILE_TYPE_ICON_MAP[key];
                 break;
             }
         }
@@ -307,6 +304,7 @@ export default class FileStorage extends React.Component{
             <div onClick={this.handleClick.bind(this)}
                  onDragEnter={this.handleDragEnter.bind(this)}
                  onDragOver={this.handleDragOver.bind(this)}
+                 onDragLeave={this.handleDragLeave.bind(this)}
                  onDragExit={this.handleDragExit.bind(this)}
                  onDrop={this.handleDrop.bind(this)}
                  style={merged_styles.canvas}>
