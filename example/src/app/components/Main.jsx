@@ -24,8 +24,8 @@ export default class Main extends React.Component {
         this._fileUploadTimer = this._fileUploadTimer || 0;
         this._fileUploadTimer = this._fileUploadTimer + Math.random() * 2000;
         setTimeout(() => {
-            //callback_file_task(file, new Error('Error!'));
-            callback_file_task(file, 'jlsfj dfj ldjf douf ojf osduf uf dsuhofgf dsfgdsou fosdiufh dsofu dfiud fsdfhsdufd fdijd');
+            callback_file_task(file, new Error('Done, but with errors: hf klhkf gd gfiufdh fhdfh fh dsfgds dshf gfds l'));
+            //callback_file_task(file, 'jlsfj dfj ldjf douf ojf osduf uf dsuhofgf dsfgdsou fosdiufh dsofu dfiud fsdfhsdufd fdijd');
         }, Math.random() * this._fileUploadTimer);
     }
 
@@ -49,7 +49,7 @@ export default class Main extends React.Component {
                 onFileLoaded={this.handleFileLoaded.bind(this)}
                 idleMessage="Your files go here, dude!"
                 dropMessage="Dropped!"
-                maxConcurrentProcessedFiles="10" //TODO
+                maxConcurrentProcessedFiles="1" //TODO
                 maxQueuedFiles="20" //TODO
                 allowQueueUpdate={true}
 

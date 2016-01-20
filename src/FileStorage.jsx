@@ -53,7 +53,10 @@ export default class FileStorage extends React.Component{
 
 
     handleClick(){
-        this._reset_states();
+        if (this.state.box_style_key === 'processed')
+            this._reset_states();
+        else
+            console.log('no reset:', this.state.box_style_key)
     }
 
     handleDragEnter(event){
@@ -82,7 +85,6 @@ export default class FileStorage extends React.Component{
         this._reset_states();
     }
     handleDragLeave(event){
-        console.log('drag leave');
         event.preventDefault();
         event.preventDefault();
         this._reset_states();
@@ -95,7 +97,7 @@ export default class FileStorage extends React.Component{
             let has_processing_callback = typeof this.props.onFileLoaded === 'function';
             this.setState({
                 box_style_key: 'drop',
-                message: null,
+                //message: this.props.dropMessage || 'Drag & Drop files here to add to queue',
                 is_idle: false,
                 is_processing: has_processing_callback
             });
@@ -160,17 +162,18 @@ export default class FileStorage extends React.Component{
         //It's a hook for outside to i.e. pass a message or start a processing chain
         next_task = typeof next_task === 'function' ? next_task : typeof message === 'function' ? message : undefined;
         let error = message instanceof Error ? message : null,
-            right_icon = <ActionDoneAll key={Math.random()} color="#4caf50"/>,
+            right_icon = <ActionDoneAll color="#4caf50"/>,
             message_parts = [<span key={Math.random()} style={{
-                    border: '1px solid #f0f'
+                    marginRight: '1em'
                 }}>{file.size} bytes</span>],
             processed_files_count = this.state.processed_files_count,
             processed_tasks_count = 0,
-            secondary_text_lines = 1,
             box_style_key = 'drop';
 
         if (error) {
-            message_parts.push(<span key={Math.random()} style={{
+            message_parts.push(<span title={error.message} key={Math.random()} style={{
+                    //textAlign: 'right',
+                    //float: 'right',
                     color: '#DD2C00'
                 }}>{error.message}</span>);
             right_icon = <AlertErrorOutline color="#DD2C00" />;
@@ -178,8 +181,9 @@ export default class FileStorage extends React.Component{
             processed_tasks_count = this.state.file_states[file.name] ?
                 this.state.file_states[file.name].processed_tasks_count + 1 : 1;
             if (typeof message === 'string') {
-                message_parts.push(<span key={Math.random()} style={{
-                        border: '1px solid #00f',
+                message_parts.push(<span title={message} key={Math.random()} style={{
+                        //border: '1px solid #00f',
+                        //float: 'right',
                         color: this.state.muiTheme.rawTheme.palette.primary1Color
                     }}>{message}</span>);
             }
@@ -187,9 +191,6 @@ export default class FileStorage extends React.Component{
 
         if (next_task && !error){
             right_icon = <CircularProgress mode="indeterminate" size={0.5} style={{margin: 'auto 25px auto auto', top: '10px'}}/>;
-            //right_icon = <ActionHourglassEmpty key={Math.random()} color={this.state.muiTheme.rawTheme.palette.primary1Color}/>;
-            //secondary_text_lines++;
-            //new_message.unshift(<LinearProgress key={Math.random()}/>);
             next_task(file, this._callbackFileTask.bind(this));
         } else {
             processed_files_count++;
@@ -203,11 +204,11 @@ export default class FileStorage extends React.Component{
             file_states: Object.assign(this.state.file_states, {[(() => file.name)()]: {
                 processed_tasks_count: processed_tasks_count,
                 message: message_parts,
-                secondary_text_lines: secondary_text_lines,
                 right_icon: right_icon
             }})
         });
     }
+
 
 
     static _getRelevantFileTypeIcon(file_type){
@@ -242,8 +243,8 @@ export default class FileStorage extends React.Component{
             processed: Object.assign({ minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers)
         };
         const queue_box = {
-            //idle: {display: 'none'},
-            idle: Object.assign({ marginTop: '0.3em', borderWidth: '1px', borderStyle: 'solid', borderRadius: '2px' }, _inner_containers),
+            idle: {display: 'none'},
+            //idle: Object.assign({ marginTop: '0.3em', borderWidth: '1px', borderStyle: 'solid', borderRadius: '2px' }, _inner_containers),
             drag_enter: { display: 'none'},
             drag_over: { display: 'none'},
             drop: Object.assign({ marginTop: '0.3em', borderWidth: '1px', borderStyle: 'solid', borderRadius: '2px' }, _inner_containers),
@@ -302,21 +303,21 @@ export default class FileStorage extends React.Component{
 
         return(
             <div onClick={this.handleClick.bind(this)}
-                 onDragEnter={this.handleDragEnter.bind(this)}
-                 onDragOver={this.handleDragOver.bind(this)}
-                 onDragLeave={this.handleDragLeave.bind(this)}
-                 onDragExit={this.handleDragExit.bind(this)}
-                 onDrop={this.handleDrop.bind(this)}
                  style={merged_styles.canvas}>
 
-                <div style={merged_styles.drag_box[this.state.box_style_key]}>
+                <div onDragEnter={this.handleDragEnter.bind(this)}
+                     onDragOver={this.handleDragOver.bind(this)}
+                     onDragLeave={this.handleDragLeave.bind(this)}
+                     onDragExit={this.handleDragExit.bind(this)}
+                     onDrop={this.handleDrop.bind(this)}
+                     style={merged_styles.drag_box[this.state.box_style_key]}>
                     <FileFileUpload style={{display: 'table',
                                             width:'16%', height: '16%',
                                             margin: '5% auto 0 auto'}}
                                     color={merged_styles.drag_box[this.state.box_style_key].color}/>
 
                     <p style={{textAlign: 'center', fontSize: '1.5em', fontWeight: 'bold', margin: '0'}}>
-                        hallo {this.state.message}
+                        {this.state.message}
                     </p>
 
                     {/*
@@ -337,7 +338,7 @@ export default class FileStorage extends React.Component{
                             return(<div key={'queue_list_item_' + i}>
                                 <Divider inset={true} />
                                 <ListItem primaryText={file.name}
-                                          secondaryTextLines={this.state.file_states[file.name].secondary_text_lines}
+                                          secondaryTextLines={1}
                                           secondaryText={this.state.file_states[file.name].message}
                                           rightIcon={this.state.file_states[file.name].right_icon}
                                           leftAvatar={FileStorage._getRelevantFileTypeIcon(file.type)} />
