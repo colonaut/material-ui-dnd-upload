@@ -61,7 +61,7 @@ export default class FileStorage extends React.Component{
 
     handleDragEnter(event){
         event.preventDefault();
-        event.preventDefault();
+        event.stopPropagation();
         if (this.state.is_idle) {
             this.setState({
                 box_style_key: 'drag_enter'
@@ -71,7 +71,7 @@ export default class FileStorage extends React.Component{
 
     handleDragOver(event){
         event.preventDefault();
-        event.preventDefault();
+        event.stopPropagation();
         if (this.state.is_idle){
             this.setState({
                 box_style_key: 'drag_over'
@@ -81,16 +81,26 @@ export default class FileStorage extends React.Component{
 
     handleDragExit(event){
         event.preventDefault();
-        event.preventDefault();
-        this._reset_states();
+        event.stopPropagation();
+        if (this.state.is_idle) {
+            this.setState({
+                box_style_key: 'idle'
+            });
+        }
     }
     handleDragLeave(event){
+
         event.preventDefault();
-        event.preventDefault();
-        this._reset_states();
+        event.stopPropagation();
+        if (this.state.is_idle) {
+            this.setState({
+                box_style_key: 'idle'
+            });
+        }
     }
 
     handleDrop(event){
+        this._unleft_drag_count--;
         event.stopPropagation();
         event.preventDefault();
         if (this.state.is_idle || this.props.allowQueueUpdate) { //only do drop stuff if there is something done on drop
@@ -98,8 +108,7 @@ export default class FileStorage extends React.Component{
             this.setState({
                 box_style_key: 'drop',
                 //message: this.props.dropMessage || 'Drag & Drop files here to add to queue',
-                is_idle: false,
-                is_processing: has_processing_callback
+                is_idle: false
             });
 
             this._transfer_files = event.dataTransfer.files;
@@ -116,8 +125,7 @@ export default class FileStorage extends React.Component{
                         } else {
                             this.setState({file_states: Object.assign(this.state.file_states, {
                                 [(() => transfer_file.name)()]: {
-                                    message: transfer_file.size + ' | bytes',
-                                    is_processing: false
+                                    message: transfer_file.size + ' | bytes'
                                 }
                             })});
                         }
@@ -138,19 +146,24 @@ export default class FileStorage extends React.Component{
         setTimeout(() => {
             let new_queue = this.state.queue;
             new_queue.unshift(transfer_file);
+            let new_files_waiting = this.state.files_waiting;
+            new_files_waiting.push(transfer_file.name);
+
             this.setState({
-                queue: new_queue
-            });
+                queue: new_queue,
+                files_waiting: new_files_waiting
+            }, () => {console.log('CALLBACK SET STATE');});
         }, 0);//this.state.queue.length * 200 + 200);
     }
 
     _reset_states() {
         this.setState({
             is_idle: true,
-            is_processing: false, //will not be needed when we start building left side
-            processed_files_count: 0,
+            files_processed_count: 0,
             box_style_key: 'idle',
             queue: [],
+            files_processing: [],
+            files_waiting: [],
             file_states: [],
             message: this.props.idleMessage || 'Drag & drop your file(s) here!'
         });
@@ -166,43 +179,69 @@ export default class FileStorage extends React.Component{
             message_parts = [<span key={Math.random()} style={{
                     marginRight: '1em'
                 }}>{file.size} bytes</span>],
-            processed_files_count = this.state.processed_files_count,
-            processed_tasks_count = 0,
+            files_processed_count = this.state.files_processed_count,
+            files_processing = this.state.files_processing,
+            files_waiting = this.state.files_waiting,
             box_style_key = 'drop';
 
+        //pass waiting files to processing files until max sim. is reached
+        while (files_processing.length < 1 && files_waiting.length > 0){ //TODO: max simult. qty here
+            console.log(files_waiting[0], 'should move');
+            files_processing.push(files_waiting[0]);
+            files_waiting.splice(0,1);
+        }
+
+        console.log('processing:', files_processing);
+        console.log('waiting:', files_waiting);
+
+
+        //apply message of current task callback
+        if (typeof message === 'string') {
+            message_parts.push(<span title={message} key={Math.random()} style={{
+                    //border: '1px solid #00f',
+                    //float: 'right',
+                    color: this.state.muiTheme.rawTheme.palette.primary1Color
+                }}>{message}</span>);
+        }
+
+        //when we get an error object
         if (error) {
             message_parts.push(<span title={error.message} key={Math.random()} style={{
                     //textAlign: 'right',
                     //float: 'right',
                     color: '#DD2C00'
                 }}>{error.message}</span>);
+            files_processing.splice(files_processing.indexOf(file.name), 1);
+            console.log('removed?', files_processing);
             right_icon = <AlertErrorOutline color="#DD2C00" />;
-        } else {
-            processed_tasks_count = this.state.file_states[file.name] ?
-                this.state.file_states[file.name].processed_tasks_count + 1 : 1;
-            if (typeof message === 'string') {
-                message_parts.push(<span title={message} key={Math.random()} style={{
-                        //border: '1px solid #00f',
-                        //float: 'right',
-                        color: this.state.muiTheme.rawTheme.palette.primary1Color
-                    }}>{message}</span>);
+        }
+        //when we have a new task
+        else if (next_task){//when we have a new task
+            if (files_processing.indexOf(file.name)){
+                right_icon = <CircularProgress mode="indeterminate" size={0.5}
+                                               style={{margin: 'auto 25px auto auto', top: '10px'}}/>;
+                next_task(file, this._callbackFileTask.bind(this));
+            } else {
+                right_icon = <ActionHourglassEmpty />;
+                setTimeout(() => {
+                    this._callbackFileTask(file, message, next_task);
+                }, 2000);
             }
         }
-
-        if (next_task && !error){
-            right_icon = <CircularProgress mode="indeterminate" size={0.5} style={{margin: 'auto 25px auto auto', top: '10px'}}/>;
-            next_task(file, this._callbackFileTask.bind(this));
-        } else {
-            processed_files_count++;
-            if (this.state.queue.length === processed_files_count)
+        //process chain ends
+        else {
+            files_processed_count++;
+            files_processing.splice(files_processing.indexOf(file.name), 1);
+            if (this.state.queue.length === files_processed_count)
                 box_style_key = 'processed';
         }
 
         this.setState({
             box_style_key: box_style_key,
-            processed_files_count: processed_files_count,
+            files_processed_count: files_processed_count,
+            files_processing: files_processing,
+            files_waiting: files_waiting,
             file_states: Object.assign(this.state.file_states, {[(() => file.name)()]: {
-                processed_tasks_count: processed_tasks_count,
                 message: message_parts,
                 right_icon: right_icon
             }})
@@ -319,6 +358,8 @@ export default class FileStorage extends React.Component{
                     <p style={{textAlign: 'center', fontSize: '1.5em', fontWeight: 'bold', margin: '0'}}>
                         {this.state.message}
                     </p>
+
+                    bsk: {this.state.box_style_key}
 
                     {/*
                         <div style={{border: '1px solid ' + temp_colors.accent1Color, margin:'5px'}}>a 1</div>

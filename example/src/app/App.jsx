@@ -3,8 +3,8 @@ import ReactDOM from 'react-dom';
 import Main from './components/Main.jsx';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 
-//
 
+//
 (function () {
 
     //Needed for React Developer Tools
@@ -20,4 +20,8 @@ import injectTapEventPlugin from 'react-tap-event-plugin';
     // For more details see: https://facebook.github.io/react/docs/top-level-api.html#react.render
     ReactDOM.render(<Main />, document.getElementById('example'));
 
+
 })();
+
+
+
