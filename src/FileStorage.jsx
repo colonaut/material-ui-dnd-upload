@@ -12,7 +12,7 @@ import LinearProgress from 'material-ui/lib/linear-progress';
 import { List, ListItem } from 'material-ui/lib/lists';
 import Divider from 'material-ui/lib/divider';
 
-import { FileFileUpload, ActionDone, ActionDoneAll, ActionHourglassEmpty, ActionHourglassFull, AlertErrorOutline } from 'material-ui/lib/svg-icons';
+import { FileFileUpload, ActionDone, ActionDoneAll, ActionHourglassEmpty, ActionHourglassFull, AlertErrorOutline, AlertError } from 'material-ui/lib/svg-icons';
 import * as FileTypeIcons from './svg_icons';
 import FILE_TYPE_ICON_MAP from './svg_icons/file_type_icon_map';
 
@@ -72,11 +72,11 @@ export default class FileStorage extends React.Component{
     handleDragOver(event){
         event.preventDefault();
         event.stopPropagation();
-        if (this.state.is_idle){
+        //if (this.state.is_idle){
             this.setState({
                 box_style_key: 'drag_over'
             });
-        }
+        //}
     }
 
     handleDragExit(event){
@@ -189,8 +189,6 @@ export default class FileStorage extends React.Component{
         //apply message of current task callback
         if (typeof message === 'string') {
             message_parts.push(<span title={message} key={Math.random()} style={{
-                    //border: '1px solid #00f',
-                    //float: 'right',
                     color: this.state.muiTheme.rawTheme.palette.primary1Color
                 }}>{message}</span>);
         }
@@ -198,12 +196,10 @@ export default class FileStorage extends React.Component{
         //when we get an error object
         if (error) {
             message_parts.push(<span title={error.message} key={Math.random()} style={{
-                    //textAlign: 'right',
-                    //float: 'right',
                     color: '#DD2C00'
                 }}>{error.message}</span>);
             files_processing.splice(files_processing.indexOf(file.name), 1);
-            right_icon = <AlertErrorOutline color="#DD2C00" />;
+            right_icon = <AlertError color="#DD2C00" />;
         }
 
         //when we have another processing task
