@@ -49,7 +49,7 @@ export default class Main extends React.Component {
                 onFileLoaded={this.handleFileLoaded.bind(this)}
                 idleMessage="Your files go here, dude!"
                 dropMessage="Dropped!"
-                maxConcurrentProcessedFiles="1" //TODO
+                maxConcurrentProcessedFiles="2"
                 maxQueuedFiles="20" //TODO
                 allowQueueUpdate={true}
 

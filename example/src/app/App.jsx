@@ -4,7 +4,7 @@ import Main from './components/Main.jsx';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 
 
-//
+
 (function () {
 
     //Needed for React Developer Tools

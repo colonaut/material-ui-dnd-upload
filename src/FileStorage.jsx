@@ -100,11 +100,10 @@ export default class FileStorage extends React.Component{
     }
 
     handleDrop(event){
-        this._unleft_drag_count--;
         event.stopPropagation();
         event.preventDefault();
         if (this.state.is_idle || this.props.allowQueueUpdate) { //only do drop stuff if there is something done on drop
-            let has_processing_callback = typeof this.props.onFileLoaded === 'function';
+
             this.setState({
                 box_style_key: 'drop',
                 //message: this.props.dropMessage || 'Drag & Drop files here to add to queue',
@@ -113,22 +112,31 @@ export default class FileStorage extends React.Component{
 
             this._transfer_files = event.dataTransfer.files;
             for (let i = 0, transfer_file; transfer_file = this._transfer_files[i]; i++) {
+
                 let reader = new FileReader();
                 reader.onload = ((loaded_file) => {
                     return (evt) => {
-                        this._update_queue(transfer_file);
-                        if (has_processing_callback){
-                            this.props.onFileLoaded(
-                                loaded_file,
-                                evt.target.result,
-                                this._callbackFileTask.bind(this));
-                        } else {
-                            this.setState({file_states: Object.assign(this.state.file_states, {
+                        let new_queue = this.state.queue;
+                        new_queue.unshift(transfer_file);
+                        let new_files_waiting = this.state.files_waiting;
+                        new_files_waiting.push(transfer_file.name);
+
+                        this.setState({
+                            file_states: Object.assign(this.state.file_states, {
                                 [(() => transfer_file.name)()]: {
                                     message: transfer_file.size + ' | bytes'
-                                }
-                            })});
-                        }
+                                }}),
+                            queue: new_queue,
+                            files_waiting: new_files_waiting
+                        }, () => {
+                            if (typeof this.props.onFileLoaded === 'function'){
+                                this.props.onFileLoaded.call(this,
+                                    loaded_file,
+                                    evt.target.result,
+                                    this._callbackFileTask.bind(this));
+                            }
+                        });
+
                     };
                 })(transfer_file);
 
@@ -142,19 +150,6 @@ export default class FileStorage extends React.Component{
         }
     }
 
-    _update_queue(transfer_file){
-        setTimeout(() => {
-            let new_queue = this.state.queue;
-            new_queue.unshift(transfer_file);
-            let new_files_waiting = this.state.files_waiting;
-            new_files_waiting.push(transfer_file.name);
-
-            this.setState({
-                queue: new_queue,
-                files_waiting: new_files_waiting
-            }, () => {console.log('CALLBACK SET STATE');});
-        }, 0);//this.state.queue.length * 200 + 200);
-    }
 
     _reset_states() {
         this.setState({
@@ -185,15 +180,11 @@ export default class FileStorage extends React.Component{
             box_style_key = 'drop';
 
         //pass waiting files to processing files until max sim. is reached
-        while (files_processing.length < 1 && files_waiting.length > 0){ //TODO: max simult. qty here
-            console.log(files_waiting[0], 'should move');
+        while (files_processing.length < (this.props.maxConcurrentProcessedFiles || 5)
+                && files_waiting.length > 0){
             files_processing.push(files_waiting[0]);
             files_waiting.splice(0,1);
         }
-
-        console.log('processing:', files_processing);
-        console.log('waiting:', files_waiting);
-
 
         //apply message of current task callback
         if (typeof message === 'string') {
@@ -212,15 +203,16 @@ export default class FileStorage extends React.Component{
                     color: '#DD2C00'
                 }}>{error.message}</span>);
             files_processing.splice(files_processing.indexOf(file.name), 1);
-            console.log('removed?', files_processing);
             right_icon = <AlertErrorOutline color="#DD2C00" />;
         }
-        //when we have a new task
+
+        //when we have another processing task
         else if (next_task){//when we have a new task
-            if (files_processing.indexOf(file.name)){
+            //console.log(file.name, files_processing.indexOf(file.name));
+            if (files_processing.indexOf(file.name) > -1){
                 right_icon = <CircularProgress mode="indeterminate" size={0.5}
                                                style={{margin: 'auto 25px auto auto', top: '10px'}}/>;
-                next_task(file, this._callbackFileTask.bind(this));
+                next_task.call(this, file, this._callbackFileTask.bind(this));
             } else {
                 right_icon = <ActionHourglassEmpty />;
                 setTimeout(() => {
@@ -228,6 +220,7 @@ export default class FileStorage extends React.Component{
                 }, 2000);
             }
         }
+
         //process chain ends
         else {
             files_processed_count++;
