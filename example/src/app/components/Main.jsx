@@ -54,7 +54,6 @@ export default class Main extends React.Component {
                 allowQueueUpdate={true}
 
                 />
-
         </div>);
     }
 }

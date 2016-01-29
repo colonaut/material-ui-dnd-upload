@@ -72,11 +72,11 @@ export default class FileStorage extends React.Component{
     handleDragOver(event){
         event.preventDefault();
         event.stopPropagation();
-        //if (this.state.is_idle){
+        if (this.state.is_idle){
             this.setState({
                 box_style_key: 'drag_over'
             });
-        //}
+        }
     }
 
     handleDragExit(event){
@@ -113,8 +113,12 @@ export default class FileStorage extends React.Component{
             this._transfer_files = event.dataTransfer.files;
             for (let i = 0, transfer_file; transfer_file = this._transfer_files[i]; i++) {
 
+                if (this.state.queue.find(f => f.name === transfer_file.name)) //if file is already queued, ignore it
+                    continue;
+
                 let reader = new FileReader();
                 reader.onload = ((loaded_file) => {
+
                     return (evt) => {
                         let new_queue = this.state.queue;
                         new_queue.unshift(transfer_file);

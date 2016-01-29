@@ -4,7 +4,7 @@ import Main from './components/Main.jsx';
 import injectTapEventPlugin from 'react-tap-event-plugin';
 
 
-///////////////
+/**/
 
 (function () {
 
@@ -20,7 +20,6 @@ import injectTapEventPlugin from 'react-tap-event-plugin';
     // Render the main app react component into the document body.
     // For more details see: https://facebook.github.io/react/docs/top-level-api.html#react.render
     ReactDOM.render(<Main />, document.getElementById('example'));
-
 
 })();
 
