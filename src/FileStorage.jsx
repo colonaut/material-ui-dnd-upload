@@ -8,13 +8,13 @@ import ThemeManager from 'material-ui/lib/styles/theme-manager';
 
 import Avatar from 'material-ui/lib/avatar';
 import CircularProgress from 'material-ui/lib/circular-progress';
-import LinearProgress from 'material-ui/lib/linear-progress';
 import { List, ListItem } from 'material-ui/lib/lists';
 import Divider from 'material-ui/lib/divider';
 
 import { FileFileUpload, ActionDone, ActionDoneAll, ActionHourglassEmpty, ActionHourglassFull, AlertErrorOutline, AlertError } from 'material-ui/lib/svg-icons';
 import * as FileTypeIcons from './svg_icons';
 import FILE_TYPE_ICON_MAP from './svg_icons/file_type_icon_map';
+import getRelevantContextStyles from './styles';
 
 export default class FileStorage extends React.Component{
     constructor(props) {
@@ -158,8 +158,11 @@ export default class FileStorage extends React.Component{
     _reset_states() {
         this.setState({
             is_idle: true,
+            is_drag: false, //implement
+            is_drop: false, //implement
+            is_processing: false, //implement
+            box_style_key: 'idle', //will be deprecated
             files_processed_count: 0,
-            box_style_key: 'idle',
             queue: [],
             files_processing: [],
             files_waiting: [],
@@ -242,7 +245,6 @@ export default class FileStorage extends React.Component{
     }
 
 
-
     static _getRelevantFileTypeIcon(file_type){
         let icon = <FileTypeIcons.FileTypeUnknown/>;
         let keys = Object.keys(FILE_TYPE_ICON_MAP);
@@ -257,80 +259,9 @@ export default class FileStorage extends React.Component{
         return <Avatar key={Math.random()} icon={icon} />;
     }
 
-    static get _styles(){
-        const _inner_containers = {
-            boxSizing: 'border-box',
-            marginLeft: 'auto',
-            marginRight: 'auto',
-            minWidth: '250px',
-            maxWidth: '600px',
-            width: '100%'
-        };
-
-        const drag_box = {
-            idle: Object.assign({ minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers),
-            drag_enter: Object.assign({ minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers),
-            drag_over: Object.assign({ minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers),
-            drop: Object.assign({ minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers),
-            processed: Object.assign({ minHeight: '200px', borderWidth: '5px', borderStyle: 'dashed', borderRadius: '3px' }, _inner_containers)
-        };
-        const queue_box = {
-            idle: {display: 'none'},
-            //idle: Object.assign({ marginTop: '0.3em', borderWidth: '1px', borderStyle: 'solid', borderRadius: '2px' }, _inner_containers),
-            drag_enter: { display: 'none'},
-            drag_over: { display: 'none'},
-            drop: Object.assign({ marginTop: '0.3em', borderWidth: '1px', borderStyle: 'solid', borderRadius: '2px' }, _inner_containers),
-            processed: Object.assign({ marginTop: '0.3em', borderWidth: '1px', borderStyle: 'solid', borderRadius: '2px' }, _inner_containers)
-        };
-
-        return {
-            canvas: { boxSizing: 'border-box', padding: '2em 1em'},
-            drag_box: drag_box,
-            queue_box: queue_box
-        };
-    }
-
-    static _mergeRelevantContextStyles(mui_theme){
-        const styles = FileStorage._styles;
-        let raw_theme = mui_theme.rawTheme;
-        //console.log('the raw theme:', raw_theme);
-
-        Object.assign(styles.canvas, {
-            fontFamily: raw_theme.fontFamily,
-            backgroundColor: raw_theme.palette.accent2Color
-        });
-        Object.assign(styles.drag_box.idle, {
-            color: raw_theme.palette.primary3Color, borderColor: raw_theme.palette.primary3Color
-        });
-        Object.assign(styles.drag_box.drag_enter, {
-            color: raw_theme.palette.accent3Color, borderColor: raw_theme.palette.accent3Color
-        });
-        Object.assign(styles.drag_box.drag_over, {
-            color: raw_theme.palette.accent3Color, borderColor: raw_theme.palette.accent3Color
-        });
-        Object.assign(styles.drag_box.drop, {
-            color: raw_theme.palette.primary1Color, borderColor: raw_theme.palette.primary1Color
-        });
-        Object.assign(styles.drag_box.processed, {
-            color: raw_theme.palette.primary2Color, borderColor: raw_theme.palette.primary2Color
-        });
-
-        Object.assign(styles.queue_box.idle, { //tmp for test only
-            borderColor: raw_theme.palette.borderColor, backgroundColor: raw_theme.palette.canvasColor
-        });
-        Object.assign(styles.queue_box.drop, {
-            borderColor: raw_theme.palette.borderColor, backgroundColor: raw_theme.palette.canvasColor
-        });
-        Object.assign(styles.queue_box.processed, {
-            borderColor: raw_theme.palette.borderColor, backgroundColor: raw_theme.palette.canvasColor
-        });
-
-        return styles;
-    }
-
 
     render() {
-        let merged_styles = this.constructor._mergeRelevantContextStyles(this.state.muiTheme);
+        let merged_styles = getRelevantContextStyles(this.state.muiTheme);
         //console.log('the merged style:', merged_styles);
 
         return(
