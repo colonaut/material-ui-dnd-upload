@@ -72,11 +72,11 @@ export default class FileStorage extends React.Component{
     handleDragOver(event){
         event.preventDefault();
         event.stopPropagation();
-        if (this.state.is_idle){
+        //if (this.state.is_idle){
             this.setState({
                 box_style_key: 'drag_over'
             });
-        }
+        //}
     }
 
     handleDragExit(event){
@@ -89,7 +89,6 @@ export default class FileStorage extends React.Component{
         }
     }
     handleDragLeave(event){
-
         event.preventDefault();
         event.stopPropagation();
         if (this.state.is_idle) {
@@ -102,66 +101,60 @@ export default class FileStorage extends React.Component{
     handleDrop(event){
         event.stopPropagation();
         event.preventDefault();
-        if (this.state.is_idle || this.props.allowQueueUpdate) { //only do drop stuff if there is something done on drop
 
-            this.setState({
-                box_style_key: 'drop',
-                //message: this.props.dropMessage || 'Drag & Drop files here to add to queue',
-                is_idle: false
-            });
+        this.setState({
+            box_style_key: 'drop',
+            //message: this.props.dropMessage || 'Drag & Drop files here to add to queue',
+            is_idle: false
+        });
 
-            this._transfer_files = event.dataTransfer.files;
-            for (let i = 0, transfer_file; transfer_file = this._transfer_files[i]; i++) {
+        this._transfer_files = event.dataTransfer.files;
+        for (let i = 0, transfer_file; transfer_file = this._transfer_files[i]; i++) {
 
-                if (this.state.queue.find(f => f.name === transfer_file.name)) //if file is already queued, ignore it
-                    continue;
+            if (this.state.queue.find(f => f.name === transfer_file.name)) //if file is already queued, ignore it
+                continue;
 
-                let reader = new FileReader();
-                reader.onload = ((loaded_file) => {
+            let reader = new FileReader();
+            reader.onload = ((loaded_file) => {
 
-                    return (evt) => {
-                        let new_queue = this.state.queue;
-                        new_queue.unshift(transfer_file);
-                        let new_files_waiting = this.state.files_waiting;
-                        new_files_waiting.push(transfer_file.name);
+                return (evt) => {
+                    let new_queue = this.state.queue;
+                    new_queue.unshift(transfer_file);
+                    let new_files_waiting = this.state.files_waiting;
+                    new_files_waiting.push(transfer_file.name);
 
-                        this.setState({
-                            file_states: Object.assign(this.state.file_states, {
-                                [(() => transfer_file.name)()]: {
-                                    message: transfer_file.size + ' | bytes'
-                                }}),
-                            queue: new_queue,
-                            files_waiting: new_files_waiting
-                        }, () => {
-                            if (typeof this.props.onFileLoaded === 'function'){
-                                this.props.onFileLoaded.call(this,
-                                    loaded_file,
-                                    evt.target.result,
-                                    this._callbackFileTask.bind(this));
-                            }
-                        });
+                    this.setState({
+                        file_states: Object.assign(this.state.file_states, {
+                            [(() => transfer_file.name)()]: {
+                                message: transfer_file.size + ' | bytes'
+                            }}),
+                        queue: new_queue,
+                        files_waiting: new_files_waiting
+                    }, () => {
+                        if (typeof this.props.onFileLoaded === 'function'){
+                            this.props.onFileLoaded.call(this,
+                                loaded_file,
+                                evt.target.result,
+                                this._callbackFileTask.bind(this));
+                        }
+                    });
 
-                    };
-                })(transfer_file);
+                };
+            })(transfer_file);
 
-                console.log('determine right method for reader with transfer_file.type:', transfer_file.type);
-                reader.readAsText(transfer_file); //� returns the file contents as plain text
-                //reader.readAsArrayBuffer(file); // � returns the file contents as an ArrayBuffer (good for binary data such as images)
-                //reader.readAsDataURL(file); // � returns the file contents as a data URL
-            }
-        } else if (this.state.is_idle) {
-            this._reset_states();
+            console.log('determine right method for reader with transfer_file.type:', transfer_file.type);
+            reader.readAsText(transfer_file); //� returns the file contents as plain text
+            //reader.readAsArrayBuffer(file); // � returns the file contents as an ArrayBuffer (good for binary data such as images)
+            //reader.readAsDataURL(file); // � returns the file contents as a data URL
         }
+
     }
 
 
     _reset_states() {
         this.setState({
             is_idle: true,
-            is_drag: false, //implement
-            is_drop: false, //implement
-            is_processing: false, //implement
-            box_style_key: 'idle', //will be deprecated
+            box_style_key: 'idle',
             files_processed_count: 0,
             queue: [],
             files_processing: [],
@@ -261,23 +254,23 @@ export default class FileStorage extends React.Component{
 
 
     render() {
-        let merged_styles = getRelevantContextStyles(this.state.muiTheme);
+        let styles = getRelevantContextStyles(this.state.muiTheme);
         //console.log('the merged style:', merged_styles);
 
         return(
             <div onClick={this.handleClick.bind(this)}
-                 style={merged_styles.canvas}>
+                 style={styles.canvas}>
 
                 <div onDragEnter={this.handleDragEnter.bind(this)}
                      onDragOver={this.handleDragOver.bind(this)}
                      onDragLeave={this.handleDragLeave.bind(this)}
                      onDragExit={this.handleDragExit.bind(this)}
                      onDrop={this.handleDrop.bind(this)}
-                     style={merged_styles.drag_box[this.state.box_style_key]}>
+                     style={styles.drag_box[this.state.box_style_key]}>
                     <FileFileUpload style={{display: 'table',
                                             width:'16%', height: '16%',
                                             margin: '5% auto 0 auto'}}
-                                    color={merged_styles.drag_box[this.state.box_style_key].color}/>
+                                    color={styles.drag_box[this.state.box_style_key].color}/>
 
                     <p style={{textAlign: 'center', fontSize: '1.5em', fontWeight: 'bold', margin: '0'}}>
                         {this.state.message}
@@ -296,7 +289,7 @@ export default class FileStorage extends React.Component{
                     */}
                 </div>
 
-                <List style={merged_styles.queue_box[this.state.box_style_key]}
+                <List style={styles.queue_box[this.state.box_style_key]}
                       subheader="Queued files">
                     {
                         this.state.queue.map((file, i) => {
