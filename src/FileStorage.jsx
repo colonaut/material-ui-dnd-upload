@@ -166,8 +166,6 @@ export default class FileStorage extends React.Component{
 
 
     _callbackFileTask(error, file, message, next_task_callback){
-        //This is the optional re-passed callback for one single file, when it is loaded.
-        //It's a hook for outside to i.e. pass a message or start a processing chain
         next_task_callback = typeof next_task_callback === 'function' ?
             next_task_callback : typeof message === 'function' ?
             message : null;
@@ -180,53 +178,46 @@ export default class FileStorage extends React.Component{
             files_waiting = this.state.files_waiting,
             box_style_key = 'drop';
 
-        //pass waiting files to processing files until max sim. is reached
         while (files_processing.length < (this.props.maxConcurrentProcessedFiles || 5)
-                && files_waiting.length > 0){
+                && files_waiting.length > 0){//pass waiting files to processing files until max sim. is reached
             files_processing.push(files_waiting[0]);
             files_waiting.splice(0,1);
         }
 
-        //apply message of current task callback
-        if (typeof message === 'string') {
+        if (typeof message === 'string') { //apply message of current task callback
             message_parts.push(<span title={message} key={Math.random()} style={{
                     color: this.state.muiTheme.rawTheme.palette.primary1Color
                 }}>{message}</span>);
         }
 
-        //when we get an error object
-        if (error) {
+        if (error) { //when we get an error object
+            files_processed_count++;
+            files_processing.splice(files_processing.indexOf(file.name), 1);
             message_parts.push(<span title={error.message} key={Math.random()} style={{
                     color: '#DD2C00'
                 }}>{error.message}</span>);
-            files_processing.splice(files_processing.indexOf(file.name), 1);
             right_icon = <AlertError color="#DD2C00" />;
-        }
 
-        //when we have another processing task
-        else if (next_task_callback){//when we have a new task
-            //console.log(file.name, files_processing.indexOf(file.name));
+        } else if (next_task_callback){ //when we have another processing task
             if (files_processing.indexOf(file.name) > -1){
                 right_icon = <CircularProgress mode="indeterminate" size={0.5}
                                                style={{margin: 'auto 25px auto auto', top: '10px'}}/>;
-                next_task_callback.call(this, null, file, this._callbackFileTask.bind(this));
+                next_task_callback.call(this, file, this._callbackFileTask.bind(this));
             } else {
                 right_icon = <ActionHourglassEmpty />;
-                //console.log(file.name, 'is waiting');
+                console.log(file.name, 'is waiting');
                 setTimeout(() => {
-                    //console.log(file.name, 'is processing');
+                    console.log(file.name, 'is processing');
                     this._callbackFileTask(null, file, message, next_task_callback);
                 }, 1000);
             }
-        }
-
-        //process chain ends
-        else {
+        } else { //process chain ends
             files_processed_count++;
             files_processing.splice(files_processing.indexOf(file.name), 1);
-            if (this.state.queue.length === files_processed_count)
-                box_style_key = 'processed';
         }
+
+        if (this.state.queue.length === files_processed_count)
+            box_style_key = 'processed';
 
         this.setState({
             box_style_key: box_style_key,

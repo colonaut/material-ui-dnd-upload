@@ -32,7 +32,7 @@ const STYLES = {
 };
 
 export default function getRelevantContextStyles(mui_theme){
-    let raw_theme = mui_theme.rawTheme;
+    const raw_theme = mui_theme.rawTheme;
     //console.log('the raw theme:', raw_theme);
 
     Object.assign(STYLES.canvas, {
