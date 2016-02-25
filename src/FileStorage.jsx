@@ -165,12 +165,13 @@ export default class FileStorage extends React.Component{
     }
 
 
-    _callbackFileTask(file, message, next_task){
+    _callbackFileTask(error, file, message, next_task_callback){
         //This is the optional re-passed callback for one single file, when it is loaded.
         //It's a hook for outside to i.e. pass a message or start a processing chain
-        next_task = typeof next_task === 'function' ? next_task : typeof message === 'function' ? message : undefined;
-        let error = message instanceof Error ? message : null,
-            right_icon = <ActionDoneAll color="#4caf50"/>,
+        next_task_callback = typeof next_task_callback === 'function' ?
+            next_task_callback : typeof message === 'function' ?
+            message : null;
+        let right_icon = <ActionDoneAll color="#4caf50"/>,
             message_parts = [<span key={Math.random()} style={{
                     marginRight: '1em'
                 }}>{file.size} bytes</span>],
@@ -203,17 +204,19 @@ export default class FileStorage extends React.Component{
         }
 
         //when we have another processing task
-        else if (next_task){//when we have a new task
+        else if (next_task_callback){//when we have a new task
             //console.log(file.name, files_processing.indexOf(file.name));
             if (files_processing.indexOf(file.name) > -1){
                 right_icon = <CircularProgress mode="indeterminate" size={0.5}
                                                style={{margin: 'auto 25px auto auto', top: '10px'}}/>;
-                next_task.call(this, file, this._callbackFileTask.bind(this));
+                next_task_callback.call(this, null, file, this._callbackFileTask.bind(this));
             } else {
                 right_icon = <ActionHourglassEmpty />;
+                //console.log(file.name, 'is waiting');
                 setTimeout(() => {
-                    this._callbackFileTask(file, message, next_task);
-                }, 2000);
+                    //console.log(file.name, 'is processing');
+                    this._callbackFileTask(null, file, message, next_task_callback);
+                }, 1000);
             }
         }
 
@@ -305,9 +308,8 @@ export default class FileStorage extends React.Component{
                     }
                 </List>
 
-
-
-            </div>);
+            </div>
+        );
     }
 }
 

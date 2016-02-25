@@ -24,7 +24,9 @@ export default class Main extends React.Component {
         this._fileUploadTimer = this._fileUploadTimer || 0;
         this._fileUploadTimer = this._fileUploadTimer + Math.random() * 2000;
         setTimeout(() => {
-            callback_file_task(file, new Error('Done, but with errors: hf klhkf gd gfiufdh fhdfh fh dsfgds dshf gfds l'));
+            callback_file_task({
+                message: 'Done, but with errors: My error message'
+            }, file);
             //callback_file_task(file, 'jlsfj dfj ldjf douf ojf osduf uf dsuhofgf dsfgdsou fosdiufh dsofu dfiud fsdfhsdufd fdijd');
         }, Math.random() * this._fileUploadTimer);
     }
@@ -33,20 +35,20 @@ export default class Main extends React.Component {
         this._fileUploadTimer = this._fileUploadTimer || 0;
         this._fileUploadTimer = this._fileUploadTimer + Math.random() * 2000;
         setTimeout(() => {
-            callback_file_task(file, 'yet another task done! start another task with error task lorum ipsum un do', this.anotherTaskWithError.bind(this, file, callback_file_task));
+            callback_file_task(null, file, 'yet another task done! start another task with error task lorum ipsum un do', this.anotherTaskWithError.bind(this, file, callback_file_task));
         }, Math.random() * this._fileUploadTimer );
     }
 
-    handleFileLoaded(file, file_content, callback_file_task) {
+    handleFileStorageCallback(file, file_content, callback_file_task) {
         //console.log(file, file_content, callback_file_loaded);
         //callback_file_task(file, 'did not define a task. nothing todo.');
-        callback_file_task(file, 'start yet another task...', this.yetAnotherTask.bind(this, file, callback_file_task));
+        callback_file_task(null, file, 'start yet another task...', this.yetAnotherTask.bind(this, file, callback_file_task));
     }
 
     render() {
         return (<div>
             <FileStorage
-                onFileLoaded={this.handleFileLoaded.bind(this)}
+                onFileLoaded={this.handleFileStorageCallback.bind(this)}
                 idleMessage="Your files go here, dude!"
                 dropMessage="Dropped!"
                 maxConcurrentProcessedFiles="2"
