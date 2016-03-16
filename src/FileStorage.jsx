@@ -232,7 +232,7 @@ export default class FileStorage extends React.Component{
     }
 
 
-    static _getRelevantFileTypeIcon(file_type){
+    static _getRelevantLeftAvatar(file_type){
         let icon = <FileTypeIcons.FileTypeUnknown/>;
         let keys = Object.keys(FILE_TYPE_ICON_MAP);
 
@@ -246,6 +246,9 @@ export default class FileStorage extends React.Component{
         return <Avatar key={Math.random()} icon={icon} />;
     }
 
+    static _getRelevantRightIcon(){
+        let icon = <ActionDoneAll color="#4caf50"/>;
+    }
 
     render() {
         let styles = getRelevantContextStyles(this.state.muiTheme);
@@ -293,7 +296,7 @@ export default class FileStorage extends React.Component{
                                           secondaryTextLines={1}
                                           secondaryText={this.state.file_states[file.name].message}
                                           rightIcon={this.state.file_states[file.name].right_icon}
-                                          leftAvatar={FileStorage._getRelevantFileTypeIcon(file.type)} />
+                                          leftAvatar={FileStorage._getRelevantLeftAvatar(file.type)} />
                             </div>);
                         })
                     }
