@@ -3,9 +3,9 @@ A react component for and based on material-ui which allows to store files on th
 
 It provides a callback interface, that allows to process the stored files (i.e. upload them to a server) and pass processing results to the component to visualize them.
 
-Category
---------
-UI Component
+Characteristics
+---------------
+- Category: UI Component
 
 Features
 --------
