@@ -1,6 +1,7 @@
 /**
  * Created by cb on 1/18/2016.
  */
+'use strict';
 import React from 'react';
 import * as Icons from './index';
 

@@ -1,3 +1,4 @@
+'use strict';
 import React from 'react';
 //import Colors from 'material-ui/lib/styles/colors';
 import ThemeManager from 'material-ui/lib/styles/theme-manager';

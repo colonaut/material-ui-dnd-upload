@@ -1,3 +1,4 @@
+'use srtict';
 import React from 'react';
 import PureRenderMixin from 'react-addons-pure-render-mixin';
 import SvgIcon from '../../../node_modules/material-ui/lib/svg-icon';
