@@ -6,8 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "webpack --watch",
-    "build-example": "webpack",
-    "dev-example": "webpack-dev-server --devtool eval --progress --colors --hot --content-base ./example/www  --port 3001"
+    "build": "webpack",
+    "dev-example": "webpack-dev-server --devtool eval --progress --colors --hot --content-base ./example/www  --port 3000"
   },
   "repository": {
     "type": "git",
@@ -44,7 +44,8 @@
     "gulp-sourcemaps": "^1.6.0",
     "rimraf": "^2.5.0",
     "webpack": "^1.12.9",
-    "webpack-dev-server": "^1.14.0"
+    "webpack-dev-server": "^1.14.0",
+    "webpack-merge": "^0.14.0"
   },
   "dependencies": {
     "material-ui": "^0.14.0",
