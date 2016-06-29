@@ -16,6 +16,11 @@ import * as FileTypeIcons from './svg_icons';
 import FILE_TYPE_ICON_MAP from './svg_icons/file_type_icon_map';
 import getRelevantContextStyles from './styles';
 
+//TODO: refactor, incl. default props && const () => () instead of class...
+//TODO: support promises (promise polyfill in webpack plugins, es6 kann promises)
+//TODO: file type icons own package
+//TODO: rework theming: http://www.material-ui.com/#/customization/themes
+
 export default class FileStorage extends React.Component{
     constructor(props) {
         super(props);
@@ -23,31 +28,10 @@ export default class FileStorage extends React.Component{
 
     //Important! this is to consume the attributes/fields that are set in a parent context. In this case muiTheme (which should be set in app/main)
     static get contextTypes() {
-        return { muiTheme: React.PropTypes.object };
-    }
-/*
-    // ?needed? we have no children - Important! provide uiTheme context for children (static...) http://material-ui.com/#/customization/themes
-    static get childContextTypes() {
-        return { muiTheme: React.PropTypes.object };
-    }
-    // ?needed? we have no children - Important! http://material-ui.com/#/customization/themes
-    getChildContext() {
-        return { muiTheme: this.state.muiTheme };
-    }
-*/
-    //update theme inside state whenever a new theme is passed down from the parent / owner using context
-    componentWillReceiveProps(next_props, next_context) {
-        this.setState({
-            muiTheme: next_context.muiTheme ? next_context.muiTheme : this.state.muiTheme
-        });
+        return { muiTheme: React.PropTypes.object.isRequired };
     }
 
     componentWillMount(){
-        //set theme inside state, either context from parent or imported default theme
-        this.setState({
-            muiTheme: this.context.muiTheme ? this.context.muiTheme : ThemeManager.getMuiTheme(DefaultRawTheme)
-        });
-
         this._reset_states();
     }
 
@@ -186,7 +170,7 @@ export default class FileStorage extends React.Component{
 
         if (typeof message === 'string') { //apply message of current task callback
             message_parts.push(<span title={message} key={Math.random()} style={{
-                    color: this.state.muiTheme.rawTheme.palette.primary1Color
+                    color: this.context.muiTheme.rawTheme.palette.primary1Color
                 }}>{message}</span>);
         }
 
@@ -251,7 +235,7 @@ export default class FileStorage extends React.Component{
     }
 
     render() {
-        let styles = getRelevantContextStyles(this.state.muiTheme);
+        let styles = getRelevantContextStyles(this.context.muiTheme);
         //console.log('the merged style:', merged_styles);
 
         return(
