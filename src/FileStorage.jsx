@@ -2,24 +2,21 @@
  * Created by kalle on 04.01.2016.
  */
 'use strict';
-import React from 'react';
-import DefaultRawTheme from 'material-ui/lib/styles/raw-themes/light-raw-theme';
-import ThemeManager from 'material-ui/lib/styles/theme-manager';
-
-import Avatar from 'material-ui/lib/avatar';
+import React, { PropTypes } from 'react';
 import CircularProgress from 'material-ui/lib/circular-progress';
 import { List, ListItem } from 'material-ui/lib/lists';
 import Divider from 'material-ui/lib/divider';
 
 import { FileFileUpload, ActionDone, ActionDoneAll, ActionHourglassEmpty, ActionHourglassFull, AlertErrorOutline, AlertError } from 'material-ui/lib/svg-icons';
-import * as FileTypeIcons from './svg_icons';
-import FILE_TYPE_ICON_MAP from './svg_icons/file_type_icon_map';
 import getRelevantContextStyles from './styles';
 
 //TODO: refactor, incl. default props && const () => () instead of class...
 //TODO: support promises (promise polyfill in webpack plugins, es6 kann promises)
 //TODO: file type icons own package
 //TODO: rework theming: http://www.material-ui.com/#/customization/themes
+
+import LeftAvatar from './components/LeftAvatar.jsx';
+
 
 export default class FileStorage extends React.Component{
     constructor(props) {
@@ -215,21 +212,6 @@ export default class FileStorage extends React.Component{
         });
     }
 
-
-    static _getRelevantLeftAvatar(file_type){
-        let icon = <FileTypeIcons.FileTypeUnknown/>;
-        let keys = Object.keys(FILE_TYPE_ICON_MAP);
-
-        for (let i = 0, key; key = keys[i], i < keys.length; i++){
-            if (file_type.startsWith(key) || file_type.endsWith(key)) {
-                icon = FILE_TYPE_ICON_MAP[key];
-                break;
-            }
-        }
-
-        return <Avatar key={Math.random()} icon={icon} />;
-    }
-
     static _getRelevantRightIcon(){
         let icon = <ActionDoneAll color="#4caf50"/>;
     }
@@ -280,7 +262,8 @@ export default class FileStorage extends React.Component{
                                           secondaryTextLines={1}
                                           secondaryText={this.state.file_states[file.name].message}
                                           rightIcon={this.state.file_states[file.name].right_icon}
-                                          leftAvatar={FileStorage._getRelevantLeftAvatar(file.type)} />
+                                          leftAvatar={LeftAvatar({fileType: file.type})}
+                                />
                             </div>);
                         })
                     }
