@@ -15,7 +15,7 @@ import getRelevantContextStyles from './styles';
 //TODO: file type icons own package
 //TODO: rework theming: http://www.material-ui.com/#/customization/themes
 
-import LeftAvatar from './components/LeftAvatar.jsx';
+import FileTypeAvatar from './components/FileTypeAvatar.jsx';
 
 
 export default class FileStorage extends React.Component{
@@ -262,7 +262,7 @@ export default class FileStorage extends React.Component{
                                           secondaryTextLines={1}
                                           secondaryText={this.state.file_states[file.name].message}
                                           rightIcon={this.state.file_states[file.name].right_icon}
-                                          leftAvatar={LeftAvatar({fileType: file.type})}
+                                          leftAvatar={FileTypeAvatar({fileType: file.type})}
                                 />
                             </div>);
                         })

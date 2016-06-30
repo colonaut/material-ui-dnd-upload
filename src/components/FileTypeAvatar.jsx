@@ -12,7 +12,7 @@ const FileTypeIconMap = {
     text: <FileTypeIcons.FileTypeText />
 };
 
-const LeftAvatar = (props) => {
+const FileTypeAvatar = (props) => {
 
     let icon = <FileTypeIcons.FileTypeUnknown/>;
     let keys = Object.keys(FileTypeIconMap);
@@ -27,8 +27,8 @@ const LeftAvatar = (props) => {
     return <Avatar key={Math.random()} icon={icon} />;
 };
 
-LeftAvatar.propTypes = {
+FileTypeAvatar.propTypes = {
     fileType: PropTypes.string.isRequired
 }
 
-export default LeftAvatar;
+export default FileTypeAvatar;
