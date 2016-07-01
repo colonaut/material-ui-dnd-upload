@@ -47,7 +47,6 @@ switch (process.env.npm_lifecycle_event) {
             ],
             output: {
                 path: Path.resolve(__dirname, 'lib'),
-                //publicPath: 'http://localhost:8001/example',
                 filename: 'example.js'
             }
         });
