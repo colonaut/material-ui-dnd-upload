@@ -5,7 +5,7 @@
 import React, { PropTypes } from 'react';
 import { List, ListItem } from 'material-ui/lib/lists';
 import Divider from 'material-ui/lib/divider';
-
+import { FileFileUpload } from 'material-ui/lib/svg-icons';
 import getRelevantContextStyles from './styles';
 
 //TODO: refactor, incl. default props && const () => () instead of class...
@@ -87,25 +87,25 @@ export default class FileStorage extends React.Component{
             is_idle: false
         });
 
-        this._transfer_files = event.dataTransfer.files;
-        for (let i = 0, transfer_file; transfer_file = this._transfer_files[i]; i++) {
-
-            if (this.state.queue.find(f => f.name === transfer_file.name)) //if file is already queued, ignore it
+        for (let payload_file of event.dataTransfer.files) {
+            //if file is already queued, ignore it
+            if (this.state.queue.find(f => f.name === payload_file.name))
                 continue;
 
             let reader = new FileReader();
             reader.onload = ((loaded_file) => {
+                return (progress_event) => {
+                    let loaded_content = progress_event.target.result;
 
-                return (evt) => {
                     let new_queue = this.state.queue;
-                    new_queue.unshift(transfer_file);
+                    new_queue.unshift(loaded_file);
                     let new_files_waiting = this.state.files_waiting;
-                    new_files_waiting.push(transfer_file.name);
+                    new_files_waiting.push(loaded_file.name);
 
                     this.setState({
                         file_states: Object.assign(this.state.file_states, {
-                            [(() => transfer_file.name)()]: {
-                                message: transfer_file.size + ' | bytes',
+                            [(() => loaded_file.name)()]: {
+                                message: loaded_file.size + ' | bytes',
                                 process_state: 'loaded'
                             }}),
                         queue: new_queue,
@@ -114,16 +114,16 @@ export default class FileStorage extends React.Component{
                         if (typeof this.props.onFileLoaded === 'function'){
                             this.props.onFileLoaded.call(this,
                                 loaded_file,
-                                evt.target.result,
+                                loaded_content,
                                 this._callbackFileTask.bind(this));
                         }
                     });
 
                 };
-            })(transfer_file);
+            })(payload_file);
 
-            console.log('determine right method for reader with transfer_file.type:', transfer_file.type);
-            reader.readAsText(transfer_file); //� returns the file contents as plain text
+            console.log('determine right method for reader with transfer_file.type:', payload_file.type);
+            reader.readAsText(payload_file); //� returns the file contents as plain text
             //reader.readAsArrayBuffer(file); // � returns the file contents as an ArrayBuffer (good for binary data such as images)
             //reader.readAsDataURL(file); // � returns the file contents as a data URL
         }
@@ -261,6 +261,11 @@ export default class FileStorage extends React.Component{
                                           leftAvatar={FileTypeAvatar({
                                                 fileType: file.type
                                             })}
+                                          onClick={function(e){
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                alert('display all messages');
+                                            }}
                                 />
                             </div>);
                         })
