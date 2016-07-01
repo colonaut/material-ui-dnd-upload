@@ -8,6 +8,8 @@ import Divider from 'material-ui/lib/divider';
 import { FileFileUpload } from 'material-ui/lib/svg-icons';
 import getRelevantContextStyles from './styles';
 
+//TODO better react state and class state separation
+//TODO better Message handling (1st: as component)
 //TODO: refactor, incl. default props && const () => () instead of class...
 //TODO: support promises (promise polyfill in webpack plugins, es6 kann promises)
 //TODO: file type icons own package
