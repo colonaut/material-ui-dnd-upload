@@ -3,11 +3,9 @@
  */
 'use strict';
 import React, { PropTypes } from 'react';
-import CircularProgress from 'material-ui/lib/circular-progress';
 import { List, ListItem } from 'material-ui/lib/lists';
 import Divider from 'material-ui/lib/divider';
 
-import { FileFileUpload, ActionDone, ActionDoneAll, ActionHourglassEmpty, ActionHourglassFull, AlertErrorOutline, AlertError } from 'material-ui/lib/svg-icons';
 import getRelevantContextStyles from './styles';
 
 //TODO: refactor, incl. default props && const () => () instead of class...
@@ -16,7 +14,7 @@ import getRelevantContextStyles from './styles';
 //TODO: rework theming: http://www.material-ui.com/#/customization/themes
 
 import FileTypeAvatar from './components/FileTypeAvatar.jsx';
-
+import ProcessStateIcon from './components/ProcessStateIcon.jsx';
 
 export default class FileStorage extends React.Component{
     constructor(props) {
@@ -107,7 +105,8 @@ export default class FileStorage extends React.Component{
                     this.setState({
                         file_states: Object.assign(this.state.file_states, {
                             [(() => transfer_file.name)()]: {
-                                message: transfer_file.size + ' | bytes'
+                                message: transfer_file.size + ' | bytes',
+                                process_state: 'loaded'
                             }}),
                         queue: new_queue,
                         files_waiting: new_files_waiting
@@ -150,14 +149,14 @@ export default class FileStorage extends React.Component{
         next_task_callback = typeof next_task_callback === 'function' ?
             next_task_callback : typeof message === 'function' ?
             message : null;
-        let right_icon = <ActionDoneAll color="#4caf50"/>,
-            message_parts = [<span key={Math.random()} style={{
+        let message_parts = [<span key={Math.random()} style={{
                     marginRight: '1em'
                 }}>{file.size} bytes</span>],
             files_processed_count = this.state.files_processed_count,
             files_processing = this.state.files_processing,
             files_waiting = this.state.files_waiting,
-            box_style_key = 'drop';
+            box_style_key = 'drop',
+            file_process_state = 'completed';
 
         while (files_processing.length < (this.props.maxConcurrentProcessedFiles || 5)
                 && files_waiting.length > 0){//pass waiting files to processing files until max sim. is reached
@@ -177,16 +176,15 @@ export default class FileStorage extends React.Component{
             message_parts.push(<span title={error.message} key={Math.random()} style={{
                     color: '#DD2C00'
                 }}>{error.message}</span>);
-            right_icon = <AlertError color="#DD2C00" />;
+            file_process_state = 'error';
 
         } else if (next_task_callback){ //when we have another processing task
             if (files_processing.indexOf(file.name) > -1){
-                right_icon = <CircularProgress mode="indeterminate" size={0.5}
-                                               style={{margin: 'auto 25px auto auto', top: '10px'}}/>;
+                file_process_state = 'processing';
                 next_task_callback.call(this, file, this._callbackFileTask.bind(this));
             } else {
-                right_icon = <ActionHourglassEmpty />;
-                console.log(file.name, 'is waiting');
+                file_process_state = 'pending';
+                console.log(file.name, 'is pending');
                 setTimeout(() => {
                     console.log(file.name, 'is processing');
                     this._callbackFileTask(null, file, message, next_task_callback);
@@ -207,13 +205,9 @@ export default class FileStorage extends React.Component{
             files_waiting: files_waiting,
             file_states: Object.assign(this.state.file_states, {[(() => file.name)()]: {
                 message: message_parts,
-                right_icon: right_icon
+                process_state: file_process_state
             }})
         });
-    }
-
-    static _getRelevantRightIcon(){
-        let icon = <ActionDoneAll color="#4caf50"/>;
     }
 
     render() {
@@ -261,8 +255,12 @@ export default class FileStorage extends React.Component{
                                 <ListItem primaryText={file.name}
                                           secondaryTextLines={1}
                                           secondaryText={this.state.file_states[file.name].message}
-                                          rightIcon={this.state.file_states[file.name].right_icon}
-                                          leftAvatar={FileTypeAvatar({fileType: file.type})}
+                                          rightIcon={ProcessStateIcon({
+                                                processState: this.state.file_states[file.name].process_state
+                                            })}
+                                          leftAvatar={FileTypeAvatar({
+                                                fileType: file.type
+                                            })}
                                 />
                             </div>);
                         })
