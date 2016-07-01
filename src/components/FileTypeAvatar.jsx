@@ -18,17 +18,17 @@ const FileTypeAvatar = (props) => {
     let keys = Object.keys(FileTypeIconMap);
 
     for (let i = 0, key; key = keys[i], i < keys.length; i++){
-        if (props.fileType.startsWith(key) || props.fileType.endsWith(key)) {
+        if (props.type.startsWith(key) || props.type.endsWith(key)) {
             icon = FileTypeIconMap[key];
             break;
         }
     }
 
-    return <Avatar key={Math.random()} icon={icon} />;
+    return <Avatar icon={icon} />;
 };
 
 FileTypeAvatar.propTypes = {
-    fileType: PropTypes.string.isRequired
-}
+    type: PropTypes.string.isRequired
+};
 
 export default FileTypeAvatar;

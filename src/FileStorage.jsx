@@ -3,8 +3,7 @@
  */
 'use strict';
 import React, { PropTypes } from 'react';
-import { List, ListItem } from 'material-ui/lib/lists';
-import Divider from 'material-ui/lib/divider';
+import { List } from 'material-ui/lib/lists';
 import { FileFileUpload } from 'material-ui/lib/svg-icons';
 import getRelevantContextStyles from './styles';
 
@@ -15,8 +14,6 @@ import getRelevantContextStyles from './styles';
 //TODO: file type icons own package
 //TODO: rework theming: http://www.material-ui.com/#/customization/themes
 
-import FileTypeAvatar from './components/FileTypeAvatar.jsx';
-import ProcessStateIcon from './components/ProcessStateIcon.jsx';
 import QueueItem from './components/QueueItem.jsx';
 
 export default class FileStorage extends React.Component{
@@ -253,39 +250,14 @@ export default class FileStorage extends React.Component{
                       subheader="Queued files">
                     {
                         this.state.queue.map((file, i) => <QueueItem
-                            key = {'queue_item_' + i}
-                            name = {file.name}
-                            size = {file.size}
+                            key={'queue_item_' + i}
+                            name={file.name}
+                            type={file.type}
+                            processState={this.state.file_states[file.name].process_state}
+                            size={file.size}
                             messages={[].concat(this.state.file_states[file.name].message)}
-                            processStateIcon={ProcessStateIcon({
-                                processState: this.state.file_states[file.name].process_state
-                            })}
-                            fileTypeAvatar={FileTypeAvatar({
-                                fileType: file.type
-                            })}
+
                         />)
-
-                        /*this.state.queue.map((file, i) => {
-
-                            return(<div key={'queue_list_item_' + i}>
-                                <Divider inset={true} />
-                                <ListItem primaryText={file.name}
-                                          secondaryTextLines={1}
-                                          secondaryText={this.state.file_states[file.name].message}
-                                          rightIcon={ProcessStateIcon({
-                                                processState: this.state.file_states[file.name].process_state
-                                            })}
-                                          leftAvatar={FileTypeAvatar({
-                                                fileType: file.type
-                                            })}
-                                          onClick={function(e){
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                alert('display all messages');
-                                            }}
-                                />
-                            </div>);
-                        })*/
                     }
                 </List>
 
