@@ -17,6 +17,7 @@ import getRelevantContextStyles from './styles';
 
 import FileTypeAvatar from './components/FileTypeAvatar.jsx';
 import ProcessStateIcon from './components/ProcessStateIcon.jsx';
+import QueueItem from './components/QueueItem.jsx';
 
 export default class FileStorage extends React.Component{
     constructor(props) {
@@ -251,7 +252,21 @@ export default class FileStorage extends React.Component{
                 <List style={styles.queue_box[this.state.box_style_key]}
                       subheader="Queued files">
                     {
-                        this.state.queue.map((file, i) => {
+                        this.state.queue.map((file, i) => <QueueItem
+                            key = {'queue_item_' + i}
+                            name = {file.name}
+                            size = {file.size}
+                            messages={[].concat(this.state.file_states[file.name].message)}
+                            processStateIcon={ProcessStateIcon({
+                                processState: this.state.file_states[file.name].process_state
+                            })}
+                            fileTypeAvatar={FileTypeAvatar({
+                                fileType: file.type
+                            })}
+                        />)
+
+                        /*this.state.queue.map((file, i) => {
+
                             return(<div key={'queue_list_item_' + i}>
                                 <Divider inset={true} />
                                 <ListItem primaryText={file.name}
@@ -270,7 +285,7 @@ export default class FileStorage extends React.Component{
                                             }}
                                 />
                             </div>);
-                        })
+                        })*/
                     }
                 </List>
 

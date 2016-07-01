@@ -27,6 +27,6 @@ ProcessStateIcon.propTypes = {
     processState: React.PropTypes.oneOf([
         'pending', 'error', 'processing', 'completed', 'loaded'
     ]).isRequired
-}
+};
 
 export default ProcessStateIcon;
