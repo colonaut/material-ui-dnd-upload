@@ -51,11 +51,7 @@ export default class Main extends React.Component {
             <FileStorage
                 onFileLoaded={this.handleFileStorageCallback.bind(this)}
                 idleMessage="Your files go here, dude!"
-                dropMessage="Dropped!"
-                maxConcurrentProcessedFiles="2"
-                maxQueuedFiles="20" //TODO
                 allowQueueUpdate={true}
-
                 />
         </div>);
     }
