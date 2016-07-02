@@ -2,9 +2,9 @@
  * Created by kalle on 04.01.2016.
  */
 'use strict';
-import React, { PropTypes } from 'react';
-import { List } from 'material-ui/lib/lists';
-import { FileFileUpload } from 'material-ui/lib/svg-icons';
+import React, {PropTypes} from 'react';
+import {List} from 'material-ui/lib/lists';
+import {FileFileUpload} from 'material-ui/lib/svg-icons';
 import getRelevantContextStyles from './styles';
 
 //TODO better react state and class state separation
@@ -16,29 +16,41 @@ import getRelevantContextStyles from './styles';
 
 import QueueItem from './components/QueueItem.jsx';
 
-export default class FileStorage extends React.Component{
+export default class FileStorage extends React.Component {
     constructor(props) {
         super(props);
     }
 
     //Important! this is to consume the attributes/fields that are set in a parent context. In this case muiTheme (which should be set in app/main)
     static get contextTypes() {
-        return { muiTheme: React.PropTypes.object.isRequired };
+        return {muiTheme: React.PropTypes.object.isRequired};
     }
 
-    componentWillMount(){
+    static get defaultProps() {
+        const defaultProps = {
+            idleMessage: 'Drag & drop your file(s) here!',
+            dropMessage: 'Dropped!', //TODO depr???
+            maxConcurrentProcessedFiles: 3,
+            maxQueuedFiles: 10, //TODO implement
+            allowQueueUpdate: true
+        };
+
+        return defaultProps;
+    }
+
+    componentWillMount() {
         this._reset_states();
     }
 
 
-    handleClick(){
+    handleClick() {
         if (this.state.box_style_key === 'processed')
             this._reset_states();
         else
             console.log('no reset:', this.state.box_style_key)
     }
 
-    handleDragEnter(event){
+    handleDragEnter(event) {
         event.preventDefault();
         event.stopPropagation();
         if (this.state.is_idle) {
@@ -48,26 +60,17 @@ export default class FileStorage extends React.Component{
         }
     }
 
-    handleDragOver(event){
+    handleDragOver(event) {
         event.preventDefault();
         event.stopPropagation();
         //if (this.state.is_idle){
-            this.setState({
-                box_style_key: 'drag_over'
-            });
+        this.setState({
+            box_style_key: 'drag_over'
+        });
         //}
     }
 
-    handleDragExit(event){
-        event.preventDefault();
-        event.stopPropagation();
-        if (this.state.is_idle) {
-            this.setState({
-                box_style_key: 'idle'
-            });
-        }
-    }
-    handleDragLeave(event){
+    handleDragExit(event) {
         event.preventDefault();
         event.stopPropagation();
         if (this.state.is_idle) {
@@ -77,7 +80,17 @@ export default class FileStorage extends React.Component{
         }
     }
 
-    handleDrop(event){
+    handleDragLeave(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (this.state.is_idle) {
+            this.setState({
+                box_style_key: 'idle'
+            });
+        }
+    }
+
+    handleDrop(event) {
         event.stopPropagation();
         event.preventDefault();
 
@@ -107,11 +120,12 @@ export default class FileStorage extends React.Component{
                             [(() => loaded_file.name)()]: {
                                 message: loaded_file.size + ' | bytes',
                                 process_state: 'loaded'
-                            }}),
+                            }
+                        }),
                         queue: new_queue,
                         files_waiting: new_files_waiting
                     }, () => {
-                        if (typeof this.props.onFileLoaded === 'function'){
+                        if (typeof this.props.onFileLoaded === 'function') {
                             this.props.onFileLoaded.call(this,
                                 loaded_file,
                                 loaded_content,
@@ -139,13 +153,12 @@ export default class FileStorage extends React.Component{
             queue: [],
             files_processing: [],
             files_waiting: [],
-            file_states: [],
-            message: this.props.idleMessage || 'Drag & drop your file(s) here!'
+            file_states: []
         });
     }
 
 
-    _callbackFileTask(error, file, message, next_task_callback){
+    _callbackFileTask(error, file, message, next_task_callback) {
         next_task_callback = typeof next_task_callback === 'function' ?
             next_task_callback : typeof message === 'function' ?
             message : null;
@@ -159,9 +172,9 @@ export default class FileStorage extends React.Component{
             file_process_state = 'completed';
 
         while (files_processing.length < (this.props.maxConcurrentProcessedFiles || 5)
-                && files_waiting.length > 0){//pass waiting files to processing files until max sim. is reached
+        && files_waiting.length > 0) {//pass waiting files to processing files until max sim. is reached
             files_processing.push(files_waiting[0]);
-            files_waiting.splice(0,1);
+            files_waiting.splice(0, 1);
         }
 
         if (typeof message === 'string') { //apply message of current task callback
@@ -178,8 +191,8 @@ export default class FileStorage extends React.Component{
                 }}>{error.message}</span>);
             file_process_state = 'error';
 
-        } else if (next_task_callback){ //when we have another processing task
-            if (files_processing.indexOf(file.name) > -1){
+        } else if (next_task_callback) { //when we have another processing task
+            if (files_processing.indexOf(file.name) > -1) {
                 file_process_state = 'processing';
                 next_task_callback.call(this, file, this._callbackFileTask.bind(this));
             } else {
@@ -203,10 +216,12 @@ export default class FileStorage extends React.Component{
             files_processed_count: files_processed_count,
             files_processing: files_processing,
             files_waiting: files_waiting,
-            file_states: Object.assign(this.state.file_states, {[(() => file.name)()]: {
-                message: message_parts,
-                process_state: file_process_state
-            }})
+            file_states: Object.assign(this.state.file_states, {
+                [(() => file.name)()]: {
+                    message: message_parts,
+                    process_state: file_process_state
+                }
+            })
         });
     }
 
@@ -214,7 +229,7 @@ export default class FileStorage extends React.Component{
         let styles = getRelevantContextStyles(this.context.muiTheme);
         //console.log('the merged style:', merged_styles);
 
-        return(
+        return (
             <div onClick={this.handleClick.bind(this)}
                  style={styles.canvas}>
 
@@ -230,20 +245,20 @@ export default class FileStorage extends React.Component{
                                     color={styles.drag_box[this.state.box_style_key].color}/>
 
                     <p style={{textAlign: 'center', fontSize: '1.5em', fontWeight: 'bold', margin: '0'}}>
-                        {this.state.message}
+                        { this.props.idleMessage }
                     </p>
 
                     bsk: {this.state.box_style_key}
 
                     {/*
-                        <div style={{border: '1px solid ' + temp_colors.accent1Color, margin:'5px'}}>a 1</div>
-                        <div style={{border: '1px solid ' + temp_colors.accent2Color, margin:'5px'}}>a 2</div>
-                        <div style={{border: '1px solid ' + temp_colors.accent3Color, margin:'5px'}}>a 3</div>
+                     <div style={{border: '1px solid ' + temp_colors.accent1Color, margin:'5px'}}>a 1</div>
+                     <div style={{border: '1px solid ' + temp_colors.accent2Color, margin:'5px'}}>a 2</div>
+                     <div style={{border: '1px solid ' + temp_colors.accent3Color, margin:'5px'}}>a 3</div>
 
-                        <div style={{border: '1px solid ' + temp_colors.primary1Color, margin:'5px'}}>p 1</div>
-                        <div style={{border: '1px solid ' + temp_colors.primary2Color, margin:'5px'}}>p 2</div>
-                        <div style={{border: '1px solid ' + temp_colors.primary3Color, margin:'5px'}}>p 3</div>
-                    */}
+                     <div style={{border: '1px solid ' + temp_colors.primary1Color, margin:'5px'}}>p 1</div>
+                     <div style={{border: '1px solid ' + temp_colors.primary2Color, margin:'5px'}}>p 2</div>
+                     <div style={{border: '1px solid ' + temp_colors.primary3Color, margin:'5px'}}>p 3</div>
+                     */}
                 </div>
 
                 <List style={styles.queue_box[this.state.box_style_key]}
