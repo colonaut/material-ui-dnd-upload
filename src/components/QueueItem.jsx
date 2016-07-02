@@ -11,14 +11,14 @@ import ProcessStateIcon from './ProcessStateIcon.jsx';
 const QueueItem = (props) => (
     <div>
         <Divider inset={true} />
-        <ListItem primaryText={props.name}
+        <ListItem primaryText={props.file.name}
                   secondaryTextLines={1}
                   secondaryText={props.messages}
                   rightIcon={ProcessStateIcon({
-                        processState: props.processState
+                        processState: props.processState //check the props to get the right key
                     })}
                   leftAvatar={FileTypeAvatar({
-                        type: props.type
+                        type: props.file.type
                     })}
                   onClick={function(e){
                         e.preventDefault();
@@ -30,10 +30,14 @@ const QueueItem = (props) => (
 );
 
 QueueItem.propTypes = {
-    name: React.PropTypes.string.isRequired,
-    type: React.PropTypes.string.isRequired,
+    file: React.PropTypes.object.isRequired, //TODO: describe object, must be file
+    error: React.PropTypes.object,
+    isPending: React.PropTypes.bool,
+    isLoaded: React.PropTypes.object,
+    isProcessing: React.PropTypes.bool,
+    isCompleted: React.PropTypes.bool,
+    
     processState: React.PropTypes.string.isRequired,
-    size: React.PropTypes.number,
     messages: React.PropTypes.array
 };
 

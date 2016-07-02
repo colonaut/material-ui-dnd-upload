@@ -65,6 +65,7 @@ export default class FileStorage extends React.Component {
         event.stopPropagation();
         //if (this.state.is_idle){
         this.setState({
+            is_drag: true,
             box_style_key: 'drag_over'
         });
         //}
@@ -75,6 +76,7 @@ export default class FileStorage extends React.Component {
         event.stopPropagation();
         if (this.state.is_idle) {
             this.setState({
+                is_drag: false,
                 box_style_key: 'idle'
             });
         }
@@ -85,6 +87,7 @@ export default class FileStorage extends React.Component {
         event.stopPropagation();
         if (this.state.is_idle) {
             this.setState({
+                is_drag: false,
                 box_style_key: 'idle'
             });
         }
@@ -93,64 +96,83 @@ export default class FileStorage extends React.Component {
     handleDrop(event) {
         event.stopPropagation();
         event.preventDefault();
+        let payload_files = event.dataTransfer.files;
 
+        //set not idle, after check if already in queue
         this.setState({
             box_style_key: 'drop',
-            //message: this.props.dropMessage || 'Drag & Drop files here to add to queue',
             is_idle: false
-        });
+        }, () => {
+            for (let payload_file of payload_files) {
+                if (this.state.queue.find(queue_file => queue_file === payload_file))
+                    continue; //if file is already queued, ignore it
 
-        for (let payload_file of event.dataTransfer.files) {
-            //if file is already queued, ignore it
-            if (this.state.queue.find(f => f.name === payload_file.name))
-                continue;
-
-            let reader = new FileReader();
-            reader.onload = ((loaded_file) => {
-                return (progress_event) => {
-                    let loaded_content = progress_event.target.result;
-
-                    let new_queue = this.state.queue;
-                    new_queue.unshift(loaded_file);
-                    let new_files_waiting = this.state.files_waiting;
-                    new_files_waiting.push(loaded_file.name);
-
-                    this.setState({
-                        file_states: Object.assign(this.state.file_states, {
-                            [(() => loaded_file.name)()]: {
-                                message: loaded_file.size + ' | bytes',
-                                process_state: 'loaded'
-                            }
-                        }),
-                        queue: new_queue,
-                        files_waiting: new_files_waiting
-                    }, () => {
-                        if (typeof this.props.onFileLoaded === 'function') {
-                            this.props.onFileLoaded.call(this,
-                                loaded_file,
-                                loaded_content,
-                                this._callbackFileTask.bind(this));
+                //add to queue, after wait for loading
+                this.setState({
+                    file_states: Object.assign(this.state.file_states, {//TODO depr
+                        [(() => payload_file.name)()]: {
+                            message: 'loading...',
+                            process_state: 'pending'
                         }
-                    });
+                    }),
+                    queue: [].concat(this.state.queue, payload_file)
+                }, () => {
+                    let reader = new FileReader();
+                    reader.onload = ((loaded_file) => {
+                        return (file_progress_event) => {
+                            let loaded_content = file_progress_event.target.result;
 
-                };
-            })(payload_file);
+                            //let new_queue = this.state.queue;
+                            //new_queue.unshift(loaded_file);
+                            let new_files_waiting = this.state.files_waiting;
+                            new_files_waiting.push(loaded_file.name);
 
-            console.log('determine right method for reader with transfer_file.type:', payload_file.type);
-            reader.readAsText(payload_file); //� returns the file contents as plain text
-            //reader.readAsArrayBuffer(file); // � returns the file contents as an ArrayBuffer (good for binary data such as images)
-            //reader.readAsDataURL(file); // � returns the file contents as a data URL
-        }
+                            //
+                            this.setState({
+                                file_states: Object.assign(this.state.file_states, {
+                                    [(() => loaded_file.name)()]: { //TODO depr
+                                        message: loaded_file.size + ' | bytes',
+                                        process_state: 'loaded'
+                                    }
+                                }),
+                                files_waiting: new_files_waiting, //TODO: depr
 
+                                loaded: [].concat(this.state.queue, loaded_file),
+                                queue: this.state.queue.filter(qf => qf.name !== loaded_file.name) //TODO: we should keep queue full... or update it with the loaded file? as we render over the queue...
+                            }, () => {
+                                if (typeof this.props.onFileLoaded === 'function') {
+                                    this.props.onFileLoaded.call(this,
+                                        loaded_file,
+                                        loaded_content,
+                                        this._callbackFileTask.bind(this));
+                                }
+                            });
+
+                        };
+                    })(payload_file);
+
+                    console.log('determine right method for reader with transfer_file.type:', payload_file.type);
+                    reader.readAsText(payload_file); //� returns the file contents as plain text
+                    //reader.readAsArrayBuffer(file); // � returns the file contents as an ArrayBuffer (good for binary data such as images)
+                    //reader.readAsDataURL(file); // � returns the file contents as a data URL
+                });
+            }
+        });
     }
 
 
     _reset_states() {
         this.setState({
+            is_drag: false,
             is_idle: true,
+            queue: [],
+            loaded: [],
+            pending: [],
+            processing: [],
+            completed: [],
+
             box_style_key: 'idle',
             files_processed_count: 0,
-            queue: [],
             files_processing: [],
             files_waiting: [],
             file_states: []
@@ -266,12 +288,9 @@ export default class FileStorage extends React.Component {
                     {
                         this.state.queue.map((file, i) => <QueueItem
                             key={'queue_item_' + i}
-                            name={file.name}
-                            type={file.type}
+                            file={file}
                             processState={this.state.file_states[file.name].process_state}
-                            size={file.size}
                             messages={[].concat(this.state.file_states[file.name].message)}
-
                         />)
                     }
                 </List>

@@ -40,10 +40,10 @@ export default class Main extends React.Component {
         }, Math.random() * this._fileUploadTimer );
     }
 
-    handleFileStorageCallback(file, file_content, callback_file_task) {
+    handleFileStorageCallback(file, file_content, callback_file_task) { //TODO: err muss hier rein!
         //console.log(file, file_content, callback_file_loaded);
-        //callback_file_task(file, 'did not define a task. nothing todo.');
-        callback_file_task(null, file, 'start yet another task...', this.yetAnotherTask.bind(this, file, callback_file_task));
+        callback_file_task(file, 'did not define a task. nothing todo.');
+        //callback_file_task(null, file, 'start yet another task...', this.yetAnotherTask.bind(this, file, callback_file_task));
     }
 
     render() {
