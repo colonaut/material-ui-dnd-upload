@@ -13,7 +13,7 @@ const QueueItem = (props) => (
         <Divider inset={true} />
         <ListItem primaryText={props.file.name}
                   secondaryTextLines={1}
-                  secondaryText={props.messages}
+                  secondaryText={props.messages + ' DEBUG' + props.processState}
                   rightIcon={ProcessStateIcon({
                         processState: props.processState //check the props to get the right key
                     })}
@@ -36,7 +36,7 @@ QueueItem.propTypes = {
     isLoaded: React.PropTypes.object,
     isProcessing: React.PropTypes.bool,
     isCompleted: React.PropTypes.bool,
-    
+
     processState: React.PropTypes.string.isRequired,
     messages: React.PropTypes.array
 };

@@ -49,7 +49,7 @@ export default class Main extends React.Component {
     render() {
         return (<div>
             <FileStorage
-                onFileLoaded={this.handleFileStorageCallback.bind(this)}
+                //onFileLoaded={this.handleFileStorageCallback.bind(this)}
                 idleMessage="Your files go here, dude!"
                 allowQueueUpdate={true}
                 />

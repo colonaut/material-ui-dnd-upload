@@ -13,6 +13,7 @@ import getRelevantContextStyles from './styles';
 //TODO: support promises (promise polyfill in webpack plugins, es6 kann promises)
 //TODO: file type icons own package
 //TODO: rework theming: http://www.material-ui.com/#/customization/themes
+//TODO: save file name instead of file, and file somewhere else.. makes code easier and we might find a way to not have to pass the file outside...
 
 import QueueItem from './components/QueueItem.jsx';
 
@@ -43,7 +44,19 @@ export default class FileStorage extends React.Component {
             dropMessage: 'Dropped!', //TODO depr???
             maxConcurrentProcessedFiles: 3,
             maxQueuedFiles: 10, //TODO implement
-            allowQueueUpdate: true
+            allowQueueUpdate: true,
+            onFileLoaded: (err, file, content, callback) => {
+                //console.log(err, file, content, callback);
+                callback(null, file, '...loaded! processing 1...', (err, file, callback) => {
+                    setTimeout(function () {
+                        callback(null, file, '...1 done, processing 2....', (err, file, callback) => {
+                            setTimeout(function () {
+                                callback(null, file, '...2 done, processing 2');
+                            }, 2000);
+                        });
+                    }, 2000);
+                });
+            }
         };
 
         return defaultProps;
@@ -54,7 +67,7 @@ export default class FileStorage extends React.Component {
     }
 
 
-    loadFile(payload_file){
+    loadFile(payload_file) {
         let reader = new FileReader();
         reader.onload = ((loaded_file) => {
             return (file_progress_event) => {
@@ -72,16 +85,17 @@ export default class FileStorage extends React.Component {
                         }
                     }),
                     files_waiting: new_files_waiting, //TODO: depr
-                    loaded: [].concat(loaded_file, this.state.loaded)
+                    loaded: [loaded_file].concat(this.state.loaded)
                 }, () => {
-                    if (typeof this.props.onFileLoaded === 'function') {
-                        this.props.onFileLoaded.call(this,
-                            loaded_file,
-                            loaded_content,
-                            this._callbackFileTask.bind(this));
-                    }
-                });
+                    this.props.onFileLoaded.call(this,
+                        null,
+                        loaded_file,
+                        loaded_content,
+                        this.handleCallback.bind(this)
+                        //this._callbackFileTask.bind(this)
 
+                    );
+                });
             };
         })(payload_file);
 
@@ -91,7 +105,8 @@ export default class FileStorage extends React.Component {
         //reader.readAsDataURL(file); // � returns the file contents as a data URL
     }
 
-    queueFiles (payload_files, index) {
+    queueFiles(payload_files, index) {
+        //TODO: implement max queue here
         index = index || 0;
         if (index >= payload_files.length)
             return;
@@ -107,13 +122,70 @@ export default class FileStorage extends React.Component {
                     process_state: 'loading'
                 }
             }),
-            queue: [].concat(payload_file, this.state.queue)
+            queue: [payload_file].concat(this.state.queue)
         }, () => {
             this.queueFiles(payload_files, index + 1);
             this.loadFile(payload_file);
         });
     }
 
+    handleCallback(err, file, message, next) {
+        if (typeof message === 'function') {
+            next = message;
+            message = 'starting next...'
+        }
+
+        if (err)
+            message = err.message;
+
+        let pending = this.state.pending;
+        let processing = this.state.processing;
+        let completed = this.state.completed;
+        let poll_handle_callback, handle_next;
+
+        if (typeof next === 'function') {
+            //add given file at the end of pending, if not exists
+            if (!pending.find(f => f.name === file.name)
+                && !processing.find(f => f.name === file.name))
+                pending = pending.concat(file);
+
+            //shift up to max processing from pending to processing
+            while (processing.length < this.props.maxConcurrentProcessedFiles
+            && pending.length) {
+                processing = processing.concat(pending[0]);
+                pending.splice(0, 1);
+            }
+
+            //if file is in processing, remove from processing and call the task
+            if (processing.find(f => f.name === file.name))
+                handle_next = true;
+
+            //else if in pending, poll (timeout recall this callback with the task)
+            else if (pending.find(f => f.name === file.name))
+                poll_handle_callback = true;
+
+        } else {
+            //remove file from processing, put into completed
+            processing = processing.filter(f => f.name !== file.name);
+            completed = completed.concat(file);
+        }
+
+        this.setState({
+            processing: processing,
+            pending: pending,
+            completed: completed
+        }, () => {
+            console.log('processing', processing.join(),
+                'pending', pending.join(),
+                'completed', completed.join());
+
+            if (poll_handle_callback)
+                setTimeout(this.handleCallback.bind(this, null, file, message, next), 1000);
+
+            if (handle_next)
+                next.call(this, null, file, this.handleCallback.bind(this));
+        });
+    }
 
     handleClick() {
         if (this.state.box_style_key === 'processed')
@@ -196,7 +268,7 @@ export default class FileStorage extends React.Component {
         });
     }
 
-
+    //TODO: depr
     _callbackFileTask(error, file, message, next_task_callback) {
         next_task_callback = typeof next_task_callback === 'function' ?
             next_task_callback : typeof message === 'function' ?
@@ -306,8 +378,11 @@ export default class FileStorage extends React.Component {
                         this.state.queue.map((queued_file, i) => <QueueItem
                             key={'queue_item_' + i}
                             file={this.state.loaded.find(f => f.name === queued_file.name) || queued_file}
-                            processState={this.state.file_states[queued_file.name].process_state}
-                            messages={[].concat(this.state.file_states[queued_file.name].message)}
+                            processState={this.state.completed.find(f => f.name === queued_file.name) ? 'completed'
+                                : this.state.pending.find(f => f.name === queued_file.name) ? 'pending'
+                                : this.state.processing.find(f => f.name === queued_file.name) ? 'processing'
+                                : 'foo'}
+                            messages={[].concat('get the message in here')}
                         />)
                     }
                 </List>
