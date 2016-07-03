@@ -13,6 +13,7 @@ const ProcessStateIcon = (props) => {
             return <ActionHourglassEmpty />;
         case 'error':
             return <AlertError color="#DD2C00" />;
+        case 'loading':
         case 'processing':
             return <CircularProgress mode="indeterminate" size={0.5}
                                      style={{margin: 'auto 25px auto auto', top: '10px'}}/>;

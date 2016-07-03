@@ -19,6 +19,16 @@ import QueueItem from './components/QueueItem.jsx';
 export default class FileStorage extends React.Component {
     constructor(props) {
         super(props);
+
+        this.state = {
+            is_drag: false,
+            is_idle: true,
+            queue: [],
+            loaded: [],
+            pending: [],
+            processing: [],
+            completed: []
+        }
     }
 
     //Important! this is to consume the attributes/fields that are set in a parent context. In this case muiTheme (which should be set in app/main)
@@ -96,38 +106,47 @@ export default class FileStorage extends React.Component {
     handleDrop(event) {
         event.stopPropagation();
         event.preventDefault();
-        let payload_files = event.dataTransfer.files;
+        let payload_files = Array.from(event.dataTransfer.files);
 
-        //set not idle, after check if already in queue
+        //set not idle, then check if already in queue
         this.setState({
             box_style_key: 'drop',
             is_idle: false
         }, () => {
-            for (let payload_file of payload_files) {
-                if (this.state.queue.find(queue_file => queue_file === payload_file))
-                    continue; //if file is already queued, ignore it
 
-                //add to queue, after wait for loading
+            const addQueue = (payload_files_index) => {
+                if (payload_files_index >= payload_files.length)
+                    return;
+
+                let payload_file = payload_files[payload_files_index];
+                if (this.state.queue.find(queue_file => queue_file.name === payload_file.name))
+                    return addQueue(payload_files_index + 1); //if file is already queued, ignore it
+
+                let new_queue = this.state.queue.slice();
+                new_queue.unshift(payload_file);
                 this.setState({
                     file_states: Object.assign(this.state.file_states, {//TODO depr
                         [(() => payload_file.name)()]: {
                             message: 'loading...',
-                            process_state: 'pending'
+                            process_state: 'loading'
                         }
                     }),
-                    queue: [].concat(this.state.queue, payload_file)
+                    queue: new_queue
                 }, () => {
+                    console.log('queue now:', this.state.queue);
+                    addQueue(payload_files_index + 1);
+
                     let reader = new FileReader();
                     reader.onload = ((loaded_file) => {
                         return (file_progress_event) => {
                             let loaded_content = file_progress_event.target.result;
 
-                            //let new_queue = this.state.queue;
-                            //new_queue.unshift(loaded_file);
-                            let new_files_waiting = this.state.files_waiting;
+                            let new_loaded = this.state.loaded.slice();
+                            new_loaded.unshift(loaded_file);
+                            let new_files_waiting = this.state.files_waiting.slice();
                             new_files_waiting.push(loaded_file.name);
 
-                            //
+                            //add to loaded, then onFileLoaded callback
                             this.setState({
                                 file_states: Object.assign(this.state.file_states, {
                                     [(() => loaded_file.name)()]: { //TODO depr
@@ -136,9 +155,7 @@ export default class FileStorage extends React.Component {
                                     }
                                 }),
                                 files_waiting: new_files_waiting, //TODO: depr
-
-                                loaded: [].concat(this.state.queue, loaded_file),
-                                queue: this.state.queue.filter(qf => qf.name !== loaded_file.name) //TODO: we should keep queue full... or update it with the loaded file? as we render over the queue...
+                                loaded: new_loaded
                             }, () => {
                                 if (typeof this.props.onFileLoaded === 'function') {
                                     this.props.onFileLoaded.call(this,
@@ -155,8 +172,10 @@ export default class FileStorage extends React.Component {
                     reader.readAsText(payload_file); //� returns the file contents as plain text
                     //reader.readAsArrayBuffer(file); // � returns the file contents as an ArrayBuffer (good for binary data such as images)
                     //reader.readAsDataURL(file); // � returns the file contents as a data URL
+
                 });
-            }
+            };
+            addQueue(0)
         });
     }
 
@@ -286,11 +305,11 @@ export default class FileStorage extends React.Component {
                 <List style={styles.queue_box[this.state.box_style_key]}
                       subheader="Queued files">
                     {
-                        this.state.queue.map((file, i) => <QueueItem
+                        this.state.queue.map((queued_file, i) => <QueueItem
                             key={'queue_item_' + i}
-                            file={file}
-                            processState={this.state.file_states[file.name].process_state}
-                            messages={[].concat(this.state.file_states[file.name].message)}
+                            file={this.state.loaded.find(f => f.name === queued_file.name) || queued_file}
+                            processState={this.state.file_states[queued_file.name].process_state}
+                            messages={[].concat(this.state.file_states[queued_file.name].message)}
                         />)
                     }
                 </List>
