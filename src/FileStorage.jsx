@@ -46,7 +46,9 @@ export default class FileStorage extends React.Component {
             maxConcurrentProcessedFiles: 3,
             maxQueuedFiles: 10, //TODO implement
             allowQueueUpdate: true,
-            onFileLoaded: (err, file, content, callback) => { //TODO this should be onFileQueued, as we might rather give out the file reader and eliminate loaded
+            //TODO this should be onFileQueued, as we might not give out contents. that is business... or we set that in options {message: '', loadAs: 'buffer'}
+            //we might also set an uploas url in options.... so it's directly uploaded
+            onFileLoaded: (err, file, content, callback) => {
                 callback(null, file, '...loaded! processing 1...', (err, file, callback) => {
                     setTimeout(function () {
                         callback(null, file, '...1 done, processing 2....', (err, file, callback) => {
