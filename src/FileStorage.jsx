@@ -16,7 +16,7 @@ import getRelevantContextStyles from './styles';
 //TODO: LET QUEUE_ITEM HANDLE THE CALLBACK CHAIN! (redux then?)
 
 import QueueItem from './components/QueueItem.jsx';
-
+import FileProcessor from './file_processor.js';
 
 export default class FileStorage extends React.Component {
     constructor(props) {
@@ -48,7 +48,12 @@ export default class FileStorage extends React.Component {
             allowQueueUpdate: true,
             //TODO this should be onFileQueued, as we might not give out contents. that is business... or we set that in options {message: '', loadAs: 'buffer'}
             //we might also set an uploas url in options.... so it's directly uploaded
-            onFileLoaded: (err, file, content, callback) => {
+            onFileLoaded: (err, file_processor, callback) => {
+                console.log('file_processor', file_processor);
+                file_processor.text();
+
+            }
+            /*onFileLoaded: (err, file, content, callback) => {
                 callback(null, file, '...loaded! processing 1...', (err, file, callback) => {
                     setTimeout(function () {
                         callback(null, file, '...1 done, processing 2....', (err, file, callback) => {
@@ -58,7 +63,7 @@ export default class FileStorage extends React.Component {
                         });
                     }, 2000);
                 });
-            }
+            }*/
         };
 
         return defaultProps;
@@ -71,9 +76,6 @@ export default class FileStorage extends React.Component {
 
     loadFile(payload_file) {
         let reader = new FileReader();
-
-        console.log('reader', reader);
-
         reader.onload = ((loaded_file) => {
             return (file_progress_event) => {
                 let loaded_content = file_progress_event.target.result;
@@ -87,8 +89,6 @@ export default class FileStorage extends React.Component {
                         loaded_file,
                         loaded_content,
                         this.handleCallback.bind(this)
-                        //this._callbackFileTask.bind(this)
-
                     );
                 });
             };
@@ -116,10 +116,19 @@ export default class FileStorage extends React.Component {
             queue: [payload_file].concat(this.state.queue)
         }, () => {
             this.queueFiles(payload_files, index + 1);
-            this.loadFile(payload_file);
+
+            this.props.onFileLoaded.call(this,
+                null,
+                new FileProcessor(payload_file, this.handleCallback) //TODO
+            );
+
+            //this.loadFile(payload_file);
         });
     }
 
+    test(){
+        console.log('JAP!');
+    }
 
     handleCallback(err, file, message, next) {
         if (typeof message === 'function') {
@@ -302,7 +311,7 @@ export default class FileStorage extends React.Component {
                             processState={this.state.completed.find(f => f.name === queued_file.name) ? 'completed'
                                 : this.state.pending.find(f => f.name === queued_file.name) ? 'pending'
                                 : this.state.processing.find(f => f.name === queued_file.name) ? 'processing'
-                                : 'foo'}
+                                : 'pending'}
                             messages={[].concat('get the message in here')}
                         />)
                     }
