@@ -13,7 +13,7 @@ import getRelevantContextStyles from './styles';
 //TODO: support promises (promise polyfill in webpack plugins, es6 kann promises)
 //TODO: file type icons own package
 //TODO: rework theming: http://www.material-ui.com/#/customization/themes
-//TODO: save file name instead of file, and file somewhere else.. makes code easier and we might find a way to not have to pass the file outside...
+//TODO: LET QUEUE_ITEM HANDLE THE CALLBACK CHAIN! (redux then?)
 
 import QueueItem from './components/QueueItem.jsx';
 
@@ -31,6 +31,7 @@ export default class FileStorage extends React.Component {
             processing: [],
             completed: []
         }
+
     }
 
     //Important! this is to consume the attributes/fields that are set in a parent context. In this case muiTheme (which should be set in app/main)
@@ -45,8 +46,7 @@ export default class FileStorage extends React.Component {
             maxConcurrentProcessedFiles: 3,
             maxQueuedFiles: 10, //TODO implement
             allowQueueUpdate: true,
-            onFileLoaded: (err, file, content, callback) => {
-                //console.log(err, file, content, callback);
+            onFileLoaded: (err, file, content, callback) => { //TODO this should be onFileQueued, as we might rather give out the file reader and eliminate loaded
                 callback(null, file, '...loaded! processing 1...', (err, file, callback) => {
                     setTimeout(function () {
                         callback(null, file, '...1 done, processing 2....', (err, file, callback) => {
@@ -69,22 +69,15 @@ export default class FileStorage extends React.Component {
 
     loadFile(payload_file) {
         let reader = new FileReader();
+
+        console.log('reader', reader);
+
         reader.onload = ((loaded_file) => {
             return (file_progress_event) => {
                 let loaded_content = file_progress_event.target.result;
 
-                let new_files_waiting = this.state.files_waiting.slice(); //TODO depr
-                new_files_waiting.push(loaded_file.name);
-
                 //add to loaded, then onFileLoaded callback
                 this.setState({
-                    file_states: Object.assign(this.state.file_states, {
-                        [(() => loaded_file.name)()]: { //TODO depr
-                            message: loaded_file.size + ' | bytes',
-                            process_state: 'loaded'
-                        }
-                    }),
-                    files_waiting: new_files_waiting, //TODO: depr
                     loaded: [loaded_file].concat(this.state.loaded)
                 }, () => {
                     this.props.onFileLoaded.call(this,
@@ -99,7 +92,9 @@ export default class FileStorage extends React.Component {
             };
         })(payload_file);
 
-        console.log('determine right method for reader with transfer_file.type:', payload_file.type);
+        console.log('determine right method for reader with transfer_file.type: CHANGE THIS! WE WANT TO GIVE OUT THE READER', payload_file.type);
+        //TODO: pass the reader instead of the for result. eliminate loaded (this is business code!)
+        //-> or: just give out file name and reader, pass in options for as text, as stream (which is the reader) and eliminate loaded. loading is business code!
         reader.readAsText(payload_file); //� returns the file contents as plain text
         //reader.readAsArrayBuffer(file); // � returns the file contents as an ArrayBuffer (good for binary data such as images)
         //reader.readAsDataURL(file); // � returns the file contents as a data URL
@@ -116,18 +111,13 @@ export default class FileStorage extends React.Component {
             return this.queueFiles(payload_files, index + 1); //if file is already queued, ignore it and try next
 
         this.setState({
-            file_states: Object.assign(this.state.file_states, {//TODO depr
-                [(() => payload_file.name)()]: {
-                    message: 'loading...',
-                    process_state: 'loading'
-                }
-            }),
             queue: [payload_file].concat(this.state.queue)
         }, () => {
             this.queueFiles(payload_files, index + 1);
             this.loadFile(payload_file);
         });
     }
+
 
     handleCallback(err, file, message, next) {
         if (typeof message === 'function') {
@@ -175,9 +165,9 @@ export default class FileStorage extends React.Component {
             pending: pending,
             completed: completed
         }, () => {
-            console.log('processing', processing.join(),
+            /*console.log('processing', processing.join(),
                 'pending', pending.join(),
-                'completed', completed.join());
+                'completed', completed.join());*/
 
             if (poll_handle_callback)
                 setTimeout(this.handleCallback.bind(this, null, file, message, next), 1000);
@@ -260,81 +250,10 @@ export default class FileStorage extends React.Component {
             processing: [],
             completed: [],
 
-            box_style_key: 'idle',
-            files_processed_count: 0,
-            files_processing: [],
-            files_waiting: [],
-            file_states: []
+            box_style_key: 'idle'
         });
     }
 
-    //TODO: depr
-    _callbackFileTask(error, file, message, next_task_callback) {
-        next_task_callback = typeof next_task_callback === 'function' ?
-            next_task_callback : typeof message === 'function' ?
-            message : null;
-        let message_parts = [<span key={Math.random()} style={{
-                    marginRight: '1em'
-                }}>{file.size} bytes</span>],
-            files_processed_count = this.state.files_processed_count,
-            files_processing = this.state.files_processing,
-            files_waiting = this.state.files_waiting,
-            box_style_key = 'drop',
-            file_process_state = 'completed';
-
-        while (files_processing.length < (this.props.maxConcurrentProcessedFiles || 5)
-        && files_waiting.length > 0) {//pass waiting files to processing files until max sim. is reached
-            files_processing.push(files_waiting[0]);
-            files_waiting.splice(0, 1);
-        }
-
-        if (typeof message === 'string') { //apply message of current task callback
-            message_parts.push(<span title={message} key={Math.random()} style={{
-                    color: this.context.muiTheme.rawTheme.palette.primary1Color
-                }}>{message}</span>);
-        }
-
-        if (error) { //when we get an error object
-            files_processed_count++;
-            files_processing.splice(files_processing.indexOf(file.name), 1);
-            message_parts.push(<span title={error.message} key={Math.random()} style={{
-                    color: '#DD2C00'
-                }}>{error.message}</span>);
-            file_process_state = 'error';
-
-        } else if (next_task_callback) { //when we have another processing task
-            if (files_processing.indexOf(file.name) > -1) {
-                file_process_state = 'processing';
-                next_task_callback.call(this, file, this._callbackFileTask.bind(this));
-            } else {
-                file_process_state = 'pending';
-                console.log(file.name, 'is pending');
-                setTimeout(() => {
-                    console.log(file.name, 'is processing');
-                    this._callbackFileTask(null, file, message, next_task_callback);
-                }, 1000);
-            }
-        } else { //process chain ends
-            files_processed_count++;
-            files_processing.splice(files_processing.indexOf(file.name), 1);
-        }
-
-        if (this.state.queue.length === files_processed_count)
-            box_style_key = 'processed';
-
-        this.setState({
-            box_style_key: box_style_key,
-            files_processed_count: files_processed_count,
-            files_processing: files_processing,
-            files_waiting: files_waiting,
-            file_states: Object.assign(this.state.file_states, {
-                [(() => file.name)()]: {
-                    message: message_parts,
-                    process_state: file_process_state
-                }
-            })
-        });
-    }
 
     render() {
         let styles = getRelevantContextStyles(this.context.muiTheme);
