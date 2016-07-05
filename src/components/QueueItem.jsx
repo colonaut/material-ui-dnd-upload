@@ -8,34 +8,40 @@ import Divider from 'material-ui/lib/divider';
 import FileTypeAvatar from './FileTypeAvatar.jsx';
 import ProcessStateIcon from './ProcessStateIcon.jsx';
 
-const QueueItem = (props) => (
-    <div>
-        <Divider inset={true} />
-        <ListItem primaryText={props.file.name}
-                  secondaryTextLines={1}
-                  secondaryText={props.messages + ' DEBUG' + props.processState}
-                  rightIcon={ProcessStateIcon({
+const QueueItem = (props) => {
+
+    //props.onFileQueued(null, props.file, props.handleCallback);
+
+    console.log('queue item:', null, props.file, props.handleCallback);
+
+    props.onFileQueued(null, props.file, props.handleCallback);
+
+    return (
+        <div>
+            <Divider inset={true}/>
+            <ListItem primaryText={props.file.name}
+                      secondaryTextLines={1}
+                      secondaryText={props.messages + ' DEBUG' + props.processState}
+                      rightIcon={ProcessStateIcon({
                         processState: props.processState //check the props to get the right key
                     })}
-                  leftAvatar={FileTypeAvatar({
+                      leftAvatar={FileTypeAvatar({
                         type: props.file.type
                     })}
-                  onClick={function(e){
+                      onClick={function(e){
                         e.preventDefault();
                         e.stopPropagation();
                         alert('display all messages');
                     }}
-        />
-    </div>
-);
+            />
+        </div>
+    )
+};
 
 QueueItem.propTypes = {
     file: React.PropTypes.object.isRequired, //TODO: describe object, must be file
-    error: React.PropTypes.object,
-    isPending: React.PropTypes.bool,
-    isLoaded: React.PropTypes.object,
-    isProcessing: React.PropTypes.bool,
-    isCompleted: React.PropTypes.bool,
+    onFileQueued: React.PropTypes.func.isRequired,
+    handleCallback: React.PropTypes.func.isRequired,
 
     processState: React.PropTypes.string.isRequired,
     messages: React.PropTypes.array

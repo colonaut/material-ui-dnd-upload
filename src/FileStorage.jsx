@@ -58,6 +58,9 @@ export default class FileStorage extends React.Component {
                         });
                     }, 2000);
                 });
+            },
+            onQueued: (err, file, callback) => {
+                console.log('onQueued, err', err, 'file', file, 'callback', callback);
             }
         };
 
@@ -116,7 +119,7 @@ export default class FileStorage extends React.Component {
             queue: [payload_file].concat(this.state.queue)
         }, () => {
             this.queueFiles(payload_files, index + 1);
-            this.loadFile(payload_file);
+            //this.loadFile(payload_file);
         });
     }
 
@@ -304,6 +307,8 @@ export default class FileStorage extends React.Component {
                                 : this.state.processing.find(f => f.name === queued_file.name) ? 'processing'
                                 : 'foo'}
                             messages={[].concat('get the message in here')}
+                            onFileQueued={this.props.onQueued.bind(this)}
+                            handleCallback={this.handleCallback.bind(this)}
                         />)
                     }
                 </List>
