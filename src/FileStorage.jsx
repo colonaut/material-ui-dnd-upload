@@ -203,10 +203,11 @@ export default class FileStorage extends React.Component {
         event.preventDefault();
         event.stopPropagation();
         //if (this.state.is_idle){
-        this.setState({
-            is_drag: true,
-            box_style_key: 'drag_over'
-        });
+        if (!this.state.is_drag)
+            this.setState({
+                is_drag: true,
+                box_style_key: 'drag_over'
+            });
         //}
     }
 
