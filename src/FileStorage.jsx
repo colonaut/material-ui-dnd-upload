@@ -50,7 +50,14 @@ export default class FileStorage extends React.Component {
             //we might also set an uploas url in options.... so it's directly uploaded
             onFileLoaded: (err, file_processor, callback) => {
                 console.log('file_processor', file_processor);
-                file_processor.text();
+                file_processor.text((err, res) => {
+                    console.log('ofl fp text', res);
+                });
+                
+                file_processor.url((err, res) => {
+                    console.log('ofl fp url', res);
+                });
+                
 
             }
             /*onFileLoaded: (err, file, content, callback) => {
